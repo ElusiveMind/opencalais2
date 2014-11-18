@@ -128,9 +128,11 @@ function opencalais_form_node_form_alter(&$form, &$form_state, $form_id) {
    
     $themed_suggestions = theme('opencalais_suggestions', $vars); 
     $form[$field_name]['#suffix'] = $themed_suggestions;
-    if($auto){
-      $form[$field_name][$form[$field_name]['#language']]['#default_value'] = _opencalais_make_field_values($suggestions);
-    }
+    //if($auto){
+    //  $form[$field_name][$form[$field_name]['#language']]['#default_value'] = _opencalais_make_field_values($suggestions);
+    //}
+
+
     
     $extra[$field_name] = $suggestions; 
   }
@@ -227,7 +229,7 @@ function opencalais_node_presave($node){
   $auto = variable_get('opencalais_autotagging', array());
   $auto = isset($auto[$content_type]) ? $auto[$content_type] : 0;
   
-  if($auto && !_opencalais_already_tagged($node)){
+  if($auto){
     $fields = opencalais_get_fields_for_content_type($node->type);
 
     $suggestions = array();
@@ -237,15 +239,26 @@ function opencalais_node_presave($node){
                   
       $suggestions = opencalais_get_suggestions($node, $opencalais_type);
       if($suggestions){
-        $node->{$name} = array(
-          $node->language => array()
-        );
-      
+        if (!is_array($node->{$name}[$node->language])) {
+          $node->{$name} = array(
+            $node->language => array()
+          );
+        }
+        $key = 0;
         foreach($suggestions as $term=>$meta){
           $term = _opencalais_create_term($term, $real_field, $node, $meta);
-          $node->{$name}[$node->language][] = $term;
+          $exists = FALSE;
+          foreach($node->{$name}[$node->language] as $existing_term) {
+            if ($existing_term['name'] == $term['name']) {
+              $exists = TRUE;
+            }
+          }
+          if ($exists == FALSE) {
+            $node->{$name}[$node->language][] = $term;
+          }
+          $key++;
         }
-      
+                
         $instance = field_read_instance('node', $name, $node->type);
         //run presave as it has already been run on this entity and won't be called again before node_save
         taxonomy_field_presave('node', $node, $real_field, $instance, $node->language, $node->{$name}[$node->language]);
