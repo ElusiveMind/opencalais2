@@ -242,7 +242,7 @@ function opencalais_node_presave($node){
       if ($suggestions) {
         // We need to blank this if we're autotagging only. If we are not autotagging and
         // this array is empty anyway, then we need to initialize it to have an empty array
-        if (!is_array($node->{$name}[$node->language]) || $auto == 1) {
+        if (empty($node->{$name}[$node->language]) || $auto == 1) {
           $node->{$name} = array(
             $node->language => array()
           );
@@ -313,8 +313,7 @@ function opencalais_suggest_tags_callback($form, &$form_state, $norebuild=FALSE)
   $form_state['opencalais_suggestions'] = array();
   
   foreach ($fields as $opencalais_type => $field_name) {
-    $suggestions = opencalais_get_suggestions($node, $opencalais_type);
-    
+    $suggestions = opencalais_get_suggestions($node, $opencalais_type);    
     $form_state['opencalais_suggestions'][$field_name] = $suggestions;
     $vars = array(
       'type' => $opencalais_type, 

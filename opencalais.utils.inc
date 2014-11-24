@@ -178,10 +178,9 @@ function opencalais_get_fields_for_content_type($content_type){
   $existing = array();
 
   //fields will be an empty array if no instances are found
-  foreach($fields as $field_name => $field){
-   
+  foreach ($fields as $field_name => $field) {
     if (isset($field['settings']['opencalais'])) {
-     $opencalais_type = $field['settings']['opencalais'];
+      $opencalais_type = $field['settings']['opencalais'];
       $existing[$opencalais_type] = array('field' => $field_name, 'threshold' => $field['settings']['threshold']);
     }
   }

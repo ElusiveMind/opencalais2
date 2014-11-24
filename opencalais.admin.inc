@@ -29,8 +29,6 @@ function opencalais_admin_general_settings() {
     '#default_value' => variable_get('opencalais_bulk_processing_enabled', FALSE)
   );
   
-    
-  
   $form['help_text'] = array(
     '#markup' => '<div class="messages status">' . t('To configure tagging visit an individual content type\'s edit area and click the OpenCalais Fields tab.') . 
       '<br/><br/>' . l('Content Types Edit Screen', 'admin/structure/types') .
@@ -80,7 +78,7 @@ function opencalais_add_fields_form($content_type){
     '#title' => t('Tagging Method'),
     '#description' => t('How should OpenCalais manage the tagging?'),
     '#default_value' => $auto,
-    '#options' => array( 0 => t('Manual Tagging'), 1 => t('Automatic Tagging'))
+    '#options' => array( 0 => t('Manual Tagging'), 1 => t('Automatic Tagging'), 2 => t('Automatic & Manual Tagging'))
   );
   
   $form['info']['config'] = array('#tree' => TRUE);
