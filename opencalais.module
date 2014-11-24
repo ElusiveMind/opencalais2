@@ -128,12 +128,13 @@ function opencalais_form_node_form_alter(&$form, &$form_state, $form_id) {
    
     $themed_suggestions = theme('opencalais_suggestions', $vars); 
     $form[$field_name]['#suffix'] = $themed_suggestions;
-    //if($auto){
-    //  $form[$field_name][$form[$field_name]['#language']]['#default_value'] = _opencalais_make_field_values($suggestions);
-    //}
-
-
     
+    // Only if we are doing autotagging exclusively do we want to take the opencalais fields
+    // and make them the only things here, otherwise, we should rely on what we already have
+    // in taxonomy
+    if ($auto == 1) {
+      $form[$field_name][$form[$field_name]['#language']]['#default_value'] = _opencalais_make_field_values($suggestions);
+    }
     $extra[$field_name] = $suggestions; 
   }
   $form_state['opencalais_extras'] = $extra;
@@ -229,7 +230,7 @@ function opencalais_node_presave($node){
   $auto = variable_get('opencalais_autotagging', array());
   $auto = isset($auto[$content_type]) ? $auto[$content_type] : 0;
   
-  if($auto){
+  if ($auto > 0) {
     $fields = opencalais_get_fields_for_content_type($node->type);
 
     $suggestions = array();
@@ -238,12 +239,19 @@ function opencalais_node_presave($node){
       $real_field = field_read_field($name);
                   
       $suggestions = opencalais_get_suggestions($node, $opencalais_type);
-      if($suggestions){
-        if (!is_array($node->{$name}[$node->language])) {
+      if ($suggestions) {
+        // We need to blank this if we're autotagging only. If we are not autotagging and
+        // this array is empty anyway, then we need to initialize it to have an empty array
+        if (!is_array($node->{$name}[$node->language]) || $auto == 1) {
           $node->{$name} = array(
             $node->language => array()
           );
         }
+        
+        // This logic exists to check for tags that are appended if we want to do both
+        // manual and automatic tagging. It looks for manually added tags and preserves
+        // them while making sure any OpenCalais tags are removed and replaced with
+        // new ones from the service.
         $key = 0;
         foreach($suggestions as $term=>$meta){
           $term = _opencalais_create_term($term, $real_field, $node, $meta);
