@@ -19,7 +19,12 @@
  */
 function opencalais_api_init() {
   if (!class_exists('ARC2')) {
-	  @include_once libraries_get_path('arc') . '/ARC2.php';
+    if (file_exists(libraries_get_path('arc') . '/ARC2.php')) {
+  	  include_once libraries_get_path('arc') . '/ARC2.php';
+	  }
+	  else {
+	    drupal_set_message('Could not find the ARC2.php library in ' . libraries_get_path('arc'), 'error');
+	  }
 	}
 }
 
