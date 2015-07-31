@@ -7,7 +7,7 @@
 
 class CalaisService implements Calais {
   
-  const PATH = '/enlighten/rest/';
+  const PATH = '/permid/calais';
   
   private $defaults = array(
     'protocol' => 'http',
@@ -42,7 +42,7 @@ class CalaisService implements Calais {
    */
   function __construct($options = array()) {
     $this->defaults['externalID'] = time();
-    $this->defaults['host'] = variable_get('opencalais_api_server', 'api1.opencalais.com');
+    $this->defaults['host'] = variable_get('opencalais_api_server', 'api.thomsonreuters.com');
     
     $this->parameters = array_merge($this->defaults, $options);
   }
@@ -56,8 +56,15 @@ class CalaisService implements Calais {
    * @return The processed Calais results. The raw RDF result is contained in the $this->rdf field.
    */
   public function analyzeXML($title, $body, $date) {
+  
+    print "<pre>";
+  
     $content = $this->build_xml_content($title, $body, $date);
+
+    
     $this->parameters['contentType'] = 'TEXT/XML';
+        print_r($this->analyze($content));
+    exit();
     return $this->analyze($content);
   }
   
@@ -82,32 +89,48 @@ class CalaisService implements Calais {
    */
   public function analyze($content) {
 
-    $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
-    $data    = array(
-      'licenseID' => variable_get('opencalais_api_key', NULL),
-      'content' => $content,
-      'paramsXML' => $this->build_xml_params(),
+    $headers = array(
+      'Content-Type: text/raw',
+      'X-AG-Access-Token: Rk3d2fhp0M8SK8X6QHPuLgkI12zp3ZhX',
+      'Content-Length: ' . strlen($content),
+      'outputformat:XML/RDF',
     );
-    $data_enc = http_build_query($data, '', '&');
-    $uri = $this->parameters['protocol'] . '://' . $this->parameters['host'] . self::PATH;
+    
+    $uri = $this->parameters['protocol'] . 's://' . $this->parameters['host'] . self::PATH;
+    
     $req = array(
       'headers' => $headers,
       'method' => 'POST',
       'data' => $data_enc,
     );
-    $ret = drupal_http_request($uri, $req);
-    if (isset($ret->error)) {
-      self::log_calais_error($ret);
+
+    $curlOptions = array (
+      CURLOPT_URL => $uri,
+      CURLOPT_HTTPHEADER => $headers,
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_RETURNTRANSFER => 1,
+      CURLOPT_POSTFIELDS => $content,
+    );
+
+    $ch = curl_init();
+    curl_setopt_array($ch,$curlOptions);
+
+    // send request and get response from api..........
+    $response = curl_exec($ch);
+
+    if (isset($response->error)) {
+      self::log_calais_error($response);
       return array();
     }
 
-    $this->rdf = $ret->data;
+    $this->rdf = $response;
     $this->processor = new CalaisRdfProcessor();
     $this->keywords = $this->processor->parse_rdf($this->rdf);    
     $this->triples = $this->processor->triples;
     if (isset($this->processor->flatTriples)) {  
       $this->flatTriples = $this->processor->flatTriples;
     }
+    
     return $this->keywords;    
   }
 

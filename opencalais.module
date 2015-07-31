@@ -440,9 +440,13 @@ function opencalais_get_all_entities() {
   // Try to load the entities automagically from opencalais
   $entities = array();
   $response = drupal_http_request('http://d.opencalais.com/1/type/em/e/.html');
-  if (!isset($response->error)) {
+  if (0 && !isset($response->error)) {
     $cleaned = preg_replace('/<(link|META)(.*)>/', '', $response->data);
     $doc = simplexml_load_string($cleaned);
+    print "<pre>";
+    print_r($cleaned);
+    exit();
+    
     $spans = $doc->xpath("//span[@rtype='entity']");
     
    
