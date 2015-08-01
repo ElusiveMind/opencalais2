@@ -56,15 +56,8 @@ class CalaisService implements Calais {
    * @return The processed Calais results. The raw RDF result is contained in the $this->rdf field.
    */
   public function analyzeXML($title, $body, $date) {
-  
-    print "<pre>";
-  
     $content = $this->build_xml_content($title, $body, $date);
-
-    
     $this->parameters['contentType'] = 'TEXT/XML';
-        print_r($this->analyze($content));
-    exit();
     return $this->analyze($content);
   }
   
@@ -101,7 +94,7 @@ class CalaisService implements Calais {
     $curlOptions = array (
       CURLOPT_URL => $uri,
       CURLOPT_HTTPHEADER => $headers,
-      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_SSL_VERIFYPEER => FALSE,
       CURLOPT_RETURNTRANSFER => 1,
       CURLOPT_POSTFIELDS => $content,
     );
