@@ -294,6 +294,8 @@ function _opencalais_get_content_types(){
  */
 function _opencalais_create_term($term, $field, $node, $meta=array()){
   $lang = $node->language;
+
+
   
   $vocabularies = array();
   foreach ($field['settings']['allowed_values'] as $tree) {
@@ -301,12 +303,12 @@ function _opencalais_create_term($term, $field, $node, $meta=array()){
       $vocabularies[$vocabulary->vid] = $vocabulary;
     }
   }
-  
-  
+
   if ($possibilities = taxonomy_term_load_multiple(array(), array('name' => trim($term), 'vid' => array_keys($vocabularies)))) {
     $term = array_pop($possibilities);
   }
   else {
+  
     $vocabulary = reset($vocabularies);
     $term = array(
       'tid' => 'autocreate',

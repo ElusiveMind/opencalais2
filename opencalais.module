@@ -253,7 +253,7 @@ function opencalais_node_presave($node){
         // them while making sure any OpenCalais tags are removed and replaced with
         // new ones from the service.
         $key = 0;
-        foreach($suggestions as $term=>$meta){
+        foreach($suggestions as $term => $meta) {
           $term = _opencalais_create_term($term, $real_field, $node, $meta);
           $exists = FALSE;
           foreach($node->{$name}[$node->language] as $existing_term) {

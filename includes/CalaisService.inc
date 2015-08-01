@@ -98,12 +98,6 @@ class CalaisService implements Calais {
     
     $uri = $this->parameters['protocol'] . 's://' . $this->parameters['host'] . self::PATH;
     
-    $req = array(
-      'headers' => $headers,
-      'method' => 'POST',
-      'data' => $data_enc,
-    );
-
     $curlOptions = array (
       CURLOPT_URL => $uri,
       CURLOPT_HTTPHEADER => $headers,
