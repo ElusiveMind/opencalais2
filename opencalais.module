@@ -427,87 +427,35 @@ function opencalais_check_suggestion($settings, $term){
  * @return array of OpenCalais entities, use local defaults if they cannot be retrieved remotely
  */
 function opencalais_get_all_entities() {
-  $entities = &drupal_static(__FUNCTION__);
-  if (!empty($entities)) {
-    return $entities;
-  }
+  //$entities = &drupal_static(__FUNCTION__);
+  //if (!empty($entities)) {
+  //  return $entities;
+  //}
   
-  $entities = cache_get('opencalais_entities');
-  if ($entities) {
-   $entities = $entities->data;   
-    return $entities;
-  }
-  // Try to load the entities automagically from opencalais
-  $entities = array();
-  $response = drupal_http_request('http://d.opencalais.com/1/type/em/e/.html');
-  if (0 && !isset($response->error)) {
-    $cleaned = preg_replace('/<(link|META)(.*)>/', '', $response->data);
-    $doc = simplexml_load_string($cleaned);
-    print "<pre>";
-    print_r($cleaned);
-    exit();
-    
-    $spans = $doc->xpath("//span[@rtype='entity']");
-    
-   
-    foreach ($spans as $span) {
-      $entities[] = (string)$span['label'];       
-    }
-  }
-  else {
-    // Defaults
-    //TODO: These aren't in the right format
-    $entities = array(
-      'Anniversary',
-      'City',
-      'Company',
-      'Continent',
-      'Country',
-      'Currency',
-      'EmailAddress',
-      'EntertainmentAwardEvent',
-      'Facility',
-      'FaxNumber',
-      'Holiday',
-      'IndustryTerm',
-      'MarketIndex',
-      'MedicalCondition',
-      'MedicalTreatment',
-      'Movie',
-      'MusicAlbum',
-      'MusicGroup',
-      'NaturalDisaster',
-      'NaturalFeature',
-      'OperatingSystem',
-      'Organization',
-      'Person',
-      'PhoneNumber',
-      'PoliticalEvent',
-      'Position',
-      'Product',
-      'ProgrammingLanguage',
-      'ProvinceOrState',
-      'PublishedMedium',
-      'RadioProgram',
-      'RadioStation',
-      'Region',
-      'SportsEvent',
-      'SportsGame',
-      'SportsLeague',
-      'Technology',
-      'TVShow',
-      'TVStation',
-      'URL',
-      'NaturalDisaster',
-      'PoliticalEvent',
-    );
-  }
-    
+  //$entities = cache_get('opencalais_entities');
+  //if ($entities) {
+  // $entities = $entities->data;   
+  //  return $entities;
+  //}
+  
+  // As of 8/1/2015 it is still unknown where the list of entities can be dynamically
+  // loaded from OpenCalais. Here are the entities that are known at the time of this
+  // module's coding.
+  $entities = array(
+    'Anniversary', 'City', 'Company', 'Continent', 'Country', 'Currency', 'Editor', 
+    'EmailAddress', 'EntertainmentAwardEvent', 'Facility', 'FaxNumber', 'Holiday', 
+    'IndustryTerm', 'Journalist', 'MarketIndex', 'MedicalCondition', 'MedicalTreatment', 
+    'Movie', 'MusicAlbum', 'MusicGroup', 'NaturalFeature', 'OperatingSystem', 
+    'Organization', 'Person', 'PharmaceuticalDrug', 'PhoneNumber', 'PoliticalEvent', 
+    'Position', 'Product', 'ProgrammingLanguage', 'ProvinceOrState', 'PublishedMedium', 
+    'RadioProgram', 'RadioStation', 'Region', 'SportsEvent', 'SportsGame', 'SportsLeague', 
+    'Technology', 'TVShow', 'TVStation', 'URL');
+      
   // Special Reserved Vocabularies    
   array_push($entities, 'SocialTags', 'CalaisDocumentCategory', 'EventsFacts');
   sort($entities);
 
-  cache_set('opencalais_entities', $entities, 'cache', time() + (60 * 60 * 24));  
+  //cache_set('opencalais_entities', $entities, 'cache', time() + (60 * 60 * 24));  
   return $entities;
 }
  
