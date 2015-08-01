@@ -261,15 +261,12 @@ function opencalais_schema() {
   
   return $schema;
 }
- 
-function _opencalais_update_7000() {
-  // Migrate all data from old tables to new tables
 
-  // Migrate configuration to presets
-  
-  // Migrate permissions
-  
-  
+/**
+ * Update the api server to the one for Thomson Reuters.
+ */ 
+function opencalais_update_7101() {
+  variable_set('opencalais_api_server', 'api.thomsonreuters.com');
 }
 
   
