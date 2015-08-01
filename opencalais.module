@@ -369,16 +369,13 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
       $node->ocid = !empty($node->nid) ? $node->nid : uniqid();
     }
     
-    $elements = node_view($node);
-    //$body = strip_tags(drupal_render($elements));
-    $body = drupal_render($elements);
+    $body = $node->body[$node->language][0]['value'];
     $date = format_date($node->created, 'custom', 'r');
     
     // Allow modification of the content sent to Calais
     drupal_alter("opencalais_body", $body, $node);
         
     $opencalais = opencalais_api_get_service();
-    //$tags = $opencalais->analyzeXML($node->title, $body, $date);
     $tags = $opencalais->analyzeHTML(strip_tags($body));
     
     //get a list of all the fields for this content type
