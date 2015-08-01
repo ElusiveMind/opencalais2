@@ -379,7 +379,7 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
         
     $opencalais = opencalais_api_get_service();
     //$tags = $opencalais->analyzeXML($node->title, $body, $date);
-    $tags = $opencalais->analyzeHTML($body);
+    $tags = $opencalais->analyzeHTML(strip_tags($body));
     
     //get a list of all the fields for this content type
     $fields = opencalais_get_fields_for_content_type($node->type);
