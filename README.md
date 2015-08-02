@@ -1,5 +1,3 @@
-CALAIS
-
 INTRO
 =====
 
@@ -43,7 +41,10 @@ CREDITS
 Written by
   - Irakli Nadareshvili <irakli at phase2technology dot com>
   - Frank Febbraro <frank at phase2technology dot com>
-  
+
+Maintained by:
+  - Michel R. Bagnall <mrbagnall at icloud dot com>
+
 Sponsored by
   - Phase2 Technology <http://www.phase2technology.com>
   - ThomsonReuters <http://www.thomsonreuters.com/>
