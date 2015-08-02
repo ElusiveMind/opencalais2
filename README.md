@@ -21,7 +21,7 @@ After this ARC2.php should live at sites/all/libraries/arc/ARC2.php
    administration -> site configuration -> modules (admin/build/modules)
 
 3) Obtain Calais API from their website: 
-   http://www.opencalais.com/user/register
+   https://iameui-eagan-prod.thomsonreuters.com/iamui/UI/createUser
 
 4) Add Calais API Key and tune other settings at:
    administration -> site configuration -> modules -> Calais
