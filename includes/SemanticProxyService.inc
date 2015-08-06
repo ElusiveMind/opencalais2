@@ -81,13 +81,6 @@ class SemanticProxyService implements Calais {
     return $this->keywords;    
   }
 
-  /**
-   *
-   */
-  public function analyzeXML($title, $body, $date) {
-    throw new Exception('Method analyzeXML is not implemented in SemanticProxyService');
-  }
-
   private static function log_url_error($url) {
     $msg = t('URL for SemanticProxy is invalid: @url', array('@url' => $url));
     drupal_set_message($msg, 'error');

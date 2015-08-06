@@ -18,20 +18,6 @@ interface Calais {
   public function analyze($content);
   
   /**
-   * Analyze the provided content, passing it to Calais in XML format for more accurate data processing.
-   *
-   * @param $title  
-   *    The title of the content to process
-   * @param $body   
-   *    The body ofd the content to process
-   * @param $date   
-   *    The date of the content, if left blank/null analysis will use "today"
-   * @return 
-   *    The processed Calais results. The raw RDF result is contained in the $this->rdf field.
-   */
-  public function analyzeXML($title, $body, $date);
-
-  /**
    * Analyze the provided content, passing it to Calais in HTML format .
    *
    * @param $content  
