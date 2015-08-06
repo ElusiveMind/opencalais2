@@ -376,7 +376,8 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
     drupal_alter("opencalais_body", $body, $node);
         
     $opencalais = opencalais_api_get_service();
-    $tags = $opencalais->analyzeHTML(strip_tags($body));
+    $api_key = variable_get('opencalais_api_key', NULL);
+    $tags = $opencalais->analyzeHTML(strip_tags($body), $api_key);
     
     //get a list of all the fields for this content type
     $fields = opencalais_get_fields_for_content_type($node->type);
