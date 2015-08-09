@@ -85,6 +85,7 @@ function opencalais_create_vocabulary($entity) {
   $readable = opencalais_api_make_readable($entity);
   $machine = _opencalais_make_machine_name($entity);
   $vocabulary = taxonomy_vocabulary_machine_name_load($machine);
+
   if (!$vocabulary) { 
     $vocabulary = (object) array(
       'name' => $readable,
@@ -200,8 +201,8 @@ function opencalais_create_fields($content_type, $vocabs = array(), $all = FALSE
   }
   
   foreach ($vocabs as $vname => $vocab) {
-    //add the field 
-    opencalais_create_vocabulary($vocab);
+    // add the field 
+    opencalais_create_vocabulary($vname);
     $name = substr($vname, 0, 15);  
     opencalais_add_field($content_type, 'opencalais_'.$name.'_tags', $vname, $vname, '', $vocab['threshold']);
   }
