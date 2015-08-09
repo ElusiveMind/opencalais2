@@ -18,10 +18,49 @@ function opencalais_create_queue(){
 }
 
 /**
+ * Remove all content type items from queue.
+ */
+function opencalais_queue_remove_items($content_type) {
+  $items_removed = 0;
+  $result = db_select('queue', 'q')
+    ->fields('q') 
+    ->condition('q.name', 'opencalais_tagging_queue')
+    ->execute();
+  while ($qdata = $result->fetchObject()) {
+    $data = unserialize($qdata->data);
+    $iid = $qdata->item_id;
+    
+    $node = db_select('node', 'n')
+      ->fields('n')
+      ->condition('n.nid', $data['nid'])
+      ->execute()
+      ->fetchObject();
+    if ($node->type == $content_type) {
+      $items_removed++;
+      db_delete('queue')
+        ->condition('item_id', $iid)
+        ->execute();
+    }
+  }
+  drupal_set_message($items_removed . ' Items removed', 'status');
+  drupal_goto('admin/config/content/opencalais/bulk');
+}
+
+/**
+ * Purge the opencalais bulk processing queue.
+ */
+function opencalais_queue_remove_all() {
+  db_delete('queue')
+    ->condition('name', 'opencalais_tagging_queue')
+    ->execute();
+}
+
+
+/**
  *  Add items to a queue
  */
-function opencalais_queue_add_items($content_type){
-  $last_added = variable_get('opencalais_processed', array());
+function opencalais_queue_add_items($content_type) {
+  $last_added = array();//variable_get('opencalais_processed', array());
   $last_added = isset($last_added[$content_type]) ? $last_added[$content_type] : 0;
   
   $queue = DrupalQueue::get('opencalais_tagging_queue');
@@ -34,13 +73,13 @@ function opencalais_queue_add_items($content_type){
     ->execute();
 
   $count = 0;  
-  foreach($nids as $nid){
+  foreach ($nids as $nid) {
     $nid = $nid->nid;
     //add an item - gonna make this an assoc array in case we need to add more data later
     $queue->createItem(array('nid' => $nid));
     $count++;
   }
-  if(isset($nid)){
+  if (isset($nid)) {
     $processed = variable_get('opencalais_processed', array());
     $processed[$content_type] = $nid;
     variable_set('opencalais_processed', $processed);
@@ -56,7 +95,7 @@ function opencalais_queue_process_node($data){
   $nid = $data->data['nid'];
   try { 
     //We need to set this so that ARC2 will work and be able to connect with the OpenCalais service
-    if(!isset($_SERVER['SERVER_NAME'])){
+    if (!isset($_SERVER['SERVER_NAME'])) {
       global $base_url;
       $parts = parse_url($base_url);
       $_SERVER['SERVER_NAME'] = $parts['host'];
@@ -79,7 +118,7 @@ function opencalais_queue_get_progress(){
   $queue = DrupalQueue::get('opencalais_tagging_queue');
   $items = $queue->numberOfItems();
   
-  if($items == 0){
+  if ($items == 0) {
     return t('All queued nodes have been processed.');
   }
   else {
@@ -96,9 +135,9 @@ function opencalais_queue_cron(){
   $count = OPENCALAIS_PROCESS_COUNT;
   while($count--){
     $item = $queue->claimItem(15);
-    if(!$item){
+    if (!$item) {
       return; //we're out of items
-    }//Process the item and remove it from the queue
+    } //Process the item and remove it from the queue
     else if(opencalais_queue_process_node($item)){
       $queue->deleteItem($item);
     }
@@ -123,7 +162,7 @@ function opencalais_add_items_to_queue_callback($type){
 /**
  *  Create a form for bulk processing
  */
-function opencalais_bulk_operations_form(){
+function opencalais_bulk_operations_form() {
   //print out any messages we have
   opencalais_get_messages();
 
@@ -136,16 +175,15 @@ function opencalais_bulk_operations_form(){
   
   $form['types'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Process Content Types'),
   );
   
   $form['types']['message'] = array(
-    '#markup' => '<div class="messages">'.t('Content types marked for autotagging will be shown below. You can queue all the currently created nodes for processing by clicking the corresponding link below. OpenCalais will keep track of the latest nodes (per content-type) that it has processed to avoid processing them again.'). '</div>'
+    '#markup' => t('<h1>Bulk Operations</h1>Content types marked for autotagging will be shown below. You can queue all the currently created nodes for processing by clicking the corresponding link below. OpenCalais will keep track of the latest nodes (per content-type) that it has processed to avoid processing them again.<br /><br /><ul>')
   );
   
-  foreach($available_types as $type){
+  foreach ($available_types as $type) {
     $form['types']['opencalais_queue_content_type_'.$type] = array(
-      '#markup' => '<li>Process all (remaining) '. l($type . ' nodes', 'admin/config/content/opencalais/bulk/'.$type, array('absolute'=>TRUE, 'class'=>array('button'))) . '.</div>',
+      '#markup' => '<li><b>' . $type . '</b>: ' . l('Process All Remaining', 'admin/config/content/opencalais/bulk/' . $type, array('absolute'=>TRUE, 'class'=>array('button'))) . ' - ' . l('Remove All In Queue', 'admin/config/content/opencalais/bulk-clear/' . $type, array('absolute'=>TRUE, 'class'=>array('button'))) . '</div>',
     );
   }
   return $form;
