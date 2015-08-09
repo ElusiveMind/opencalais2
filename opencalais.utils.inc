@@ -35,7 +35,7 @@ function opencalais_add_field($content_type, $field_name, $taxonomy_name, $title
   //handle any fieldexceptions that occur by just setting and error message and returning
   try{
     //only try to create the field if it doesn't exist, otherwise just create an instance
-    if(!field_read_field($field['field_name'], array('include_inactive' => TRUE))){
+    if (!field_read_field($field['field_name'], array('include_inactive' => TRUE))){
       field_create_field($field);
       
     }
@@ -62,15 +62,13 @@ function opencalais_add_field($content_type, $field_name, $taxonomy_name, $title
   $instance['settings']['threshold'] = $threshold;
   $instance['settings']['opencalais'] = _opencalais_make_machine_name($taxonomy_name); //Flag so we can know which fields belong to this module.
 
-
- 
-  //handle any fieldexceptions that occur by just setting and error message and returning
+  // handle any fieldexceptions that occur by just setting and error message and returning
   try{
-    if(!field_read_instance('node', $instance['field_name'], $content_type)){
+    if (!field_read_instance('node', $instance['field_name'], $content_type)){
       field_create_instance($instance);
       drupal_set_message(t('OpenCalais Field for '.$taxonomy_name.' has been successfully created'));
     } else {
-      //If the field already exists then we should just update it
+      // If the field already exists then we should just update it
       field_update_instance($instance);
       drupal_set_message(t('OpenCalais Field for '.$taxonomy_name.' has been successfully updated'));
     }
@@ -124,9 +122,9 @@ function opencalais_create_vocabulary($entity) {
       $field['type'] = 'text';
       $field['cardinality'] = 1;
   
-      //handle any fieldexceptions that occur by just setting and error message and returning
+      // handle any fieldexceptions that occur by just setting and error message and returning
       try{
-      //only try to create the field if it doesn't exist, otherwise just create an instance
+        // only try to create the field if it doesn't exist, otherwise just create an instance
         if(!field_read_field($e, array('include_inactive' => TRUE))){
           field_create_field($field);
         }
@@ -149,7 +147,7 @@ function opencalais_create_vocabulary($entity) {
       );
       $instance['entity_type'] = 'taxonomy_term';
       $instance['bundle'] = $machine;
-      //handle any fieldexceptions that occur by just setting and error message and returning
+      // handle any fieldexceptions that occur by just setting and error message and returning
       try{
         if(!field_read_instance('taxonomy_term', $instance['field_name'], $machine)){
           field_create_instance($instance);
@@ -167,9 +165,9 @@ function opencalais_create_vocabulary($entity) {
 }
 
 /**
-*  Returns an array of opencalais entities which already have a field on a given content type
-*  @param content_type - the machine name of the content type to find the fields for
-*/
+ *  Returns an array of opencalais entities which already have a field on a given content type
+ *  @param content_type - the machine name of the content type to find the fields for
+ */
 function opencalais_get_fields_for_content_type($content_type){
   $fields = field_info_instances('node', $content_type);
  
@@ -197,12 +195,13 @@ function opencalais_get_fields_for_content_type($content_type){
  *  @param vocabs - an array of vocab names, if specified this will limit the vocabularies to those in the list
  */
 function opencalais_create_fields($content_type, $vocabs = array(), $all = FALSE){
-  if(!$vocabs && $all){
+  if (!$vocabs && $all){
     $vocabs = opencalais_get_all_entities();
   }
   
-  foreach($vocabs as $vname => $vocab){
+  foreach ($vocabs as $vname => $vocab) {
     //add the field 
+    opencalais_create_vocabulary($vocab);
     $name = substr($vname, 0, 15);  
     opencalais_add_field($content_type, 'opencalais_'.$name.'_tags', $vname, $vname, '', $vocab['threshold']);
   }
@@ -214,7 +213,7 @@ function opencalais_create_fields($content_type, $vocabs = array(), $all = FALSE
  *  @param vocabs - an array of vocab names to remove
  */
 function opencalais_remove_fields($content_type, $fields){
-  foreach($fields as $vname => $vocab){
+  foreach($fields as $vname => $vocab) {
     //add the field 
     $name = substr($vname, 0, 15);  
     $instance['field_name'] = 'opencalais_'.$name.'_tags';
@@ -232,7 +231,7 @@ function opencalais_remove_fields($content_type, $fields){
 /**
  *  A Utility function used to turn any (mainly CamelCase) string into a valid machine name
  */
-function _opencalais_make_machine_name($name){
+function _opencalais_make_machine_name($name) {
   $name = str_replace(' ', '_', $name);
   $name = preg_replace('/([a-z])([A-Z])/', '$1_$2', $name);
   $name = strtolower($name);
@@ -247,8 +246,8 @@ function _opencalais_delete_filter($item){ return !$item['enabled'] && $item['ex
 /**
  *  Takes an array of suggestions and turns them into values appropriate for putting into a taxonomy autocomplete field
  */
-function _opencalais_make_field_values($suggestions){
-  if(is_array($suggestions)){
+function _opencalais_make_field_values($suggestions) {
+  if (is_array($suggestions)) {
     return implode(',', array_keys($suggestions));
   } else {
     return '';
@@ -256,7 +255,7 @@ function _opencalais_make_field_values($suggestions){
 }
 
 //A Utility function to take a numericly keyed array and make it value=>value for use with forms api
-function _opencalais_make_keys(&$array){
+function _opencalais_make_keys(&$array) {
   $new_array = array();
   foreach($array as $key=>$value){
     
@@ -268,7 +267,7 @@ function _opencalais_make_keys(&$array){
 /**
  *  Utility Function to get all the content types
  */
-function _opencalais_get_content_types(){
+function _opencalais_get_content_types() {
   $nodes = entity_get_info('node');
   return $nodes['bundles'];
 } 
@@ -277,12 +276,12 @@ function _opencalais_get_content_types(){
  *  Tests to see whether any opencalais fields exist on the node and have values
  *  Returns a boolean - does not modify node
  */
- function _opencalais_already_tagged($node){
+ function _opencalais_already_tagged($node) {
    $fields = opencalais_get_fields_for_content_type($node->type);
    
-   foreach($fields as $label=>$field){
+   foreach ($fields as $label=>$field){
      $name = $field['field'];
-     if(isset($node->{$name}) && $node->{$name}){
+     if (isset($node->{$name}) && $node->{$name}) {
        return TRUE;
      }
    }
@@ -292,10 +291,8 @@ function _opencalais_get_content_types(){
 /**
  *  Save taxonomy terms for attaching to the node
  */
-function _opencalais_create_term($term, $field, $node, $meta=array()){
+function _opencalais_create_term($term, $field, $node, $meta=array()) {
   $lang = $node->language;
-
-
   
   $vocabularies = array();
   foreach ($field['settings']['allowed_values'] as $tree) {
@@ -317,9 +314,9 @@ function _opencalais_create_term($term, $field, $node, $meta=array()){
       'vocabulary_machine_name' => $vocabulary->machine_name,
     );
     
-    if(is_array($meta['extra'])){
+    if (is_array($meta['extra'])) {
       $extra = $meta['extra'];
-      foreach($extra as $name=>$value){
+      foreach ($extra as $name=>$value) {
         $term[$name] = array(
           $lang => array(
             array('value'=>$value)

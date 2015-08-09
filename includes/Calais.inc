@@ -12,10 +12,12 @@ interface Calais {
    *
    * @param $content 
    *    The content to ship off to Calais for analysis
+   * @param $api_key
+   *     The API key for OpenCalais.
    * @return 
    *    The processed Calais results. The raw RDF result is contained in the $this->rdf field.
    */
-  public function analyze($content);
+  public function analyze($content, $api_key);
   
   /**
    * Analyze the provided content, passing it to Calais in HTML format .
