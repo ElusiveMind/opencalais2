@@ -301,10 +301,10 @@ function opencalais_get_opencalais_tag_fields($form, $entity, $bundle) {
 /**
  * AJAX Callback to get OpenCalais tag suggestions for an Entity.
  */
-function opencalais_suggest_tags_callback($form, &$form_state, $norebuild=FALSE) {
-  $form_state['opencalais_building'] = true;
+function opencalais_suggest_tags_callback($form, &$form_state, $norebuild = FALSE) {
+  $form_state['opencalais_building'] = TRUE;
   $node = node_form_submit_build_node($form, $form_state);  
-  $form_state['opencalais_building'] = false;  
+  $form_state['opencalais_building'] = FALSE;  
   $fields = opencalais_get_opencalais_tag_fields($form, 'node', $node->type);
   
   // Load suggestions  
@@ -324,12 +324,12 @@ function opencalais_suggest_tags_callback($form, &$form_state, $norebuild=FALSE)
     $themed_suggestions = theme('opencalais_suggestions', $vars); 
     $commands[] = ajax_command_replace("#{$field_name}_suggestions", $themed_suggestions);        
 
-    //add extra fields to the session for storage since apparently we can't write to form state
+    // add extra fields to the session for storage since apparently we can't write to form state
     $extra[$field_name] = $suggestions; 
   }
   
   $form_state['opencalais_extras'] = $extra;
-  if(!$norebuild){
+  if (!$norebuild) {
     $form_state['rebuild'] = TRUE;
 
     /**
@@ -359,7 +359,7 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
     $suggestions = $tag_cache[$node->ocid];    
   }
   else {
-    if(!$node->title){
+    if (!$node->title) {
       //we need some way to break out if its a node being prepped to show on the node form (with no content)
       return;
     }
@@ -387,11 +387,11 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
       $terms = array();  
       $machine_name = _opencalais_make_machine_name($type);
       
-      if(isset($fields[$machine_name])){
+      if (isset($fields[$machine_name])) {
         $settings = field_info_instance('node', $fields[$machine_name]['field'], $node->type);
         foreach ($metadata->terms as $guid => $term) {
           //only add it if its relevant
-          if(opencalais_check_suggestion($settings, $term)){
+          if (opencalais_check_suggestion($settings, $term)) {
             $terms[$term->name] = array( 
               'relevance' => (float)$term->relevance,
               'extra' => $term->extra
@@ -404,7 +404,7 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
   }
 
   $tag_cache[$node->ocid] = $suggestions;
-  return isset($opencalais_type)  ? (isset($suggestions[$opencalais_type]) ? $suggestions[$opencalais_type] : array()) : $suggestions;
+  return isset($opencalais_type) ? (isset($suggestions[$opencalais_type]) ? $suggestions[$opencalais_type] : array()) : $suggestions;
 }
 
 /**
@@ -412,30 +412,22 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
  */
 function opencalais_check_suggestion($settings, $term){
   
-  if($settings && is_array($settings['settings']) && isset($settings['settings']['threshold'])){
+  if ($settings && is_array($settings['settings']) && isset($settings['settings']['threshold'])) {
     return $settings['settings']['threshold'] <= $term->relevance;
   }
 }
 
 
 /**
- * Get a list of the entities that OpenCalais API defines:
- *    http://d.opencalais.com/1/type/em/e/.html
+ * Get a list of the entities that OpenCalais API defines.
  *
- * @return array of OpenCalais entities, use local defaults if they cannot be retrieved remotely
+ * Currently this is hard-wired to list all of the current entities as of 8/1/2015. 
+ * Once we have the API service endpoint available, this will become dynamic once again.
+ *
+ * @return array $entities
+ *   OpenCalais entities, use local defaults if they cannot be retrieved remotely.
  */
 function opencalais_get_all_entities() {
-  //$entities = &drupal_static(__FUNCTION__);
-  //if (!empty($entities)) {
-  //  return $entities;
-  //}
-  
-  //$entities = cache_get('opencalais_entities');
-  //if ($entities) {
-  // $entities = $entities->data;   
-  //  return $entities;
-  //}
-  
   // As of 8/1/2015 it is still unknown where the list of entities can be dynamically
   // loaded from OpenCalais. Here are the entities that are known at the time of this
   // module's coding.
@@ -452,15 +444,14 @@ function opencalais_get_all_entities() {
   // Special Reserved Vocabularies    
   array_push($entities, 'SocialTags', 'CalaisDocumentCategory', 'EventsFacts');
   sort($entities);
-
-  //cache_set('opencalais_entities', $entities, 'cache', time() + (60 * 60 * 24));  
+ 
   return $entities;
 }
  
 /**
- *  Implements hook_form_FORM_ID_alter()
+ * Implements hook_form_FORM_ID_alter().
  *
- *  Add the threshold setting the field settings form for opencalais fields
+ * Add the threshold setting the field settings form for opencalais fields
  */    
 function opencalais_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id){
   //only show the threshold editor for nodes created by opencalais (nodes that already have a threshold and have the correct name)
@@ -479,7 +470,7 @@ function opencalais_form_field_ui_field_edit_form_alter(&$form, &$form_state, $f
 }
 
 /**
- *  Simple Validator for the system settings form;
+ * Simple Validator for the system settings form;
  */
 function opencalais_check_threshold($form, $form_state){
   $threshold = $form_state['values']['instance']['settings']['threshold'];
@@ -490,11 +481,12 @@ function opencalais_check_threshold($form, $form_state){
 
 
 /**
- *  Proprocessor for the system_settings form form to move OpenCalais Terms to the sidebar (for rubik)
+ * Pre-Processor for the system_settings form form to move OpenCalais Terms to the 
+ * sidebar (for rubik)
  */
 function opencalais_preprocess_system_settings_form(&$variables){
   if($variables['form']['#form_id'] == 'opencalais_add_fields_form'){
-    //push the help into the sidebar - this will work on rubik - not sure what else right now.
+    // push the help into the sidebar - this will work on rubik - not sure what else right now.
     $variables['sidebar'][] = $variables['form']['help'];
     unset($variables['form']['help']);
     
@@ -502,43 +494,43 @@ function opencalais_preprocess_system_settings_form(&$variables){
 }
 
 /**
- *  Function to handle the submit from the add_fields form
+ * Form submit call back function to handle the submit from the add_fields form.
  */
-function opencalais_add_fields_submit($form, &$form_state){
+function opencalais_add_fields_submit($form, &$form_state) {
   $content_type = $form_state['values']['content_type'];
 
   $to_add = array_filter($form_state['values']['config']['entities'], '_opencalais_filter');
   $to_rem = array_filter($form_state['values']['config']['entities'], '_opencalais_delete_filter');
   opencalais_create_fields($content_type, $to_add);
   opencalais_remove_fields($content_type, $to_rem);
-  //I'm slightly worried about batch operations causing a race condition here - we'll have to see
+  // I'm slightly worried about batch operations causing a race condition here - we'll have to see
   $settings = variable_get('opencalais_autotagging', array());
   
   $settings[$content_type] = $form_state['values'][$content_type.'_autotagging'];
   variable_set('opencalais_autotagging', $settings);
 }
 
-
-
 /**
  *  Retrieve a list of extra fields to apply to a vocabulary
  */
-function opencalais_get_extra_fields($vocab){
+function opencalais_get_extra_fields($vocab) {
   $geo = array('City', 'Country', 'ProvinceOrState');
   $company = array('Company');
   $product = array('Product');
   
-  if(in_array($vocab, $geo)){
+  if (in_array($vocab, $geo)) {
     return array('Latitude', 'Longitude', 'ContainedByState', 'ContainedByCounty');
-  } else if(in_array($vocab, $company)){
+  } 
+  else if (in_array($vocab, $company)) {
     return array('Ticker', 'LegalName');
-  } else if(in_array($vocab, $product)){
+  } 
+  else if (in_array($vocab, $product)) {
     return array();
   }
 }
 
 /**
- *  Implements hook_cron - allows for bulk processing
+ *  Implements hook_cron().
  */
 function opencalais_cron(){
   module_load_include('inc', 'opencalais', 'opencalais.bulk');
