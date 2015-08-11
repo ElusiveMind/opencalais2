@@ -31,7 +31,7 @@ class CalaisRdfProcessor {
   public function parse_rdf($rdf_xml) {
     if (!class_exists('ARC2')) {
       drupal_set_message('Unable to process, ARC2 Library is missing.', 'error');
-      drupal_goto('<front>';
+      drupal_goto('<front>');
     }
     $parser = ARC2::getRDFXMLParser();
     $parser->parse(NULL, $rdf_xml);
@@ -376,7 +376,7 @@ class CalaisRdfProcessor {
 
     if (!class_exists('ARC2')) {
       drupal_set_message('Unable to process, ARC2 Library is missing.', 'error');
-      drupal_goto('<front>';
+      drupal_goto('<front>');
     }
 
     $parser = ARC2::getRDFXMLParser();
