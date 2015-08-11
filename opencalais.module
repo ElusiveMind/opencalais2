@@ -77,8 +77,17 @@ function opencalais_menu() {
   );
 
   $items['admin/config/content/opencalais/bulk-clear/%'] = array(
-    'title' => t('Process Content Type'),
+    'title' => t('Clear Content Type Queue'),
     'page callback' => 'opencalais_queue_remove_items',
+    'page arguments' => array(5),
+    'access arguments' => array('administer opencalais'),
+    'file' => 'opencalais.bulk.inc',
+    'type' => MENU_CALLBACK
+  );
+
+  $items['admin/config/content/opencalais/bulk-re-queue/%'] = array(
+    'title' => t('Clear Content Type and Re-Queue'),
+    'page callback' => 'opencalais_queue_reset',
     'page arguments' => array(5),
     'access arguments' => array('administer opencalais'),
     'file' => 'opencalais.bulk.inc',
