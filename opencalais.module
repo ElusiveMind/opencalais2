@@ -536,7 +536,10 @@ function opencalais_get_extra_fields($vocab) {
 /**
  *  Implements hook_cron().
  */
-function opencalais_cron(){
-  module_load_include('inc', 'opencalais', 'opencalais.bulk');
-  opencalais_queue_cron();
+function opencalais_cron() {
+  $run = variable_get('opencalais_bulk_processing_enabled', FALSE);
+  if ($run != FALSE) {
+    module_load_include('inc', 'opencalais', 'opencalais.bulk');
+    opencalais_queue_cron();
+  }
 }
