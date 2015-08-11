@@ -124,7 +124,8 @@ class CalaisMetadata {
   /**
    * Takes the CamelCase type and adds spaces (to make it Camel Case)
    *
-   * @return string
+   * @return string $type
+   *   A string representation of the input type with spaces.
    */
   function readable_type() {
     return calais_api_make_readable($this->type);

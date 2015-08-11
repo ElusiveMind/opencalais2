@@ -1,5 +1,5 @@
 <?php
-// $Id: Calais.inc,v 1.1.2.16.2.2 2009/12/14 21:50:26 febbraro Exp $
+
 /**
  * @file Calais.inc
  * The main interface to the calais web service
