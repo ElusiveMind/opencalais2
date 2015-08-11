@@ -421,8 +421,9 @@ function opencalais_check_suggestion($settings, $term){
 /**
  * Get a list of the entities that OpenCalais API defines.
  *
- * Currently this is hard-wired to list all of the current entities as of 8/1/2015. 
- * Once we have the API service endpoint available, this will become dynamic once again.
+ * As of the new API for OpenCalais, there is no dynamic way to get the list of entities.
+ * This list was taken from the API documentation, which I was told is the correct way
+ * to get this information.
  *
  * @return array $entities
  *   OpenCalais entities, use local defaults if they cannot be retrieved remotely.
