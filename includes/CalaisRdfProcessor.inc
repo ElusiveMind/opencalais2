@@ -1,5 +1,5 @@
 <?php
-// $Id$
+
 /**
  * @file CalaisRdfProcessor.inc
  *  The parser for the Calais RDF/XML responses.
@@ -29,6 +29,10 @@ class CalaisRdfProcessor {
    *    CalaisMetadata.inc
    */
   public function parse_rdf($rdf_xml) {
+    if (!class_exists('ARC2')) {
+      drupal_set_message('Unable to process, ARC2 Library is missing.', 'error');
+      drupal_goto('<front>';
+    }
     $parser = ARC2::getRDFXMLParser();
     $parser->parse(NULL, $rdf_xml);
     $this->triples = $parser->getSimpleIndex();
@@ -369,7 +373,12 @@ class CalaisRdfProcessor {
     if (isset($ret->error)) {
       return array();
     }
-  
+
+    if (!class_exists('ARC2')) {
+      drupal_set_message('Unable to process, ARC2 Library is missing.', 'error');
+      drupal_goto('<front>';
+    }
+
     $parser = ARC2::getRDFXMLParser();
     $parser->parse(NULL, $ret->data);
     $triples = $parser->getSimpleIndex();
@@ -384,8 +393,7 @@ class CalaisRdfProcessor {
         }
       }
     }
-  
     return $uris;
   }
- 
+
 }

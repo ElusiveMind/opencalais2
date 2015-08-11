@@ -34,7 +34,7 @@ function opencalais_permission() {
 }
 
 /**
- *  Implementation of hook_menu().
+ *  Implements of hook_menu().
  */
 function opencalais_menu() {
   $items = array();
@@ -139,7 +139,7 @@ function opencalais_form_node_form_alter(&$form, &$form_state, $form_id) {
   }
   $form_state['opencalais_extras'] = $extra;
   
-  if($fields){
+  if ($fields) {
     $path = drupal_get_path('module', 'opencalais');
     $form['actions']['suggest_tags'] = array(
       '#type' => 'submit', 
@@ -192,7 +192,9 @@ function opencalais_form_node_form_alter(&$form, &$form_state, $form_id) {
  *  TODO: See if we can also add in the addition of the disambiguation information here
  */
 function opencalais_node_form_submit($form, &$form_state){
-  if(isset($form_state['opencalais_building']) && $form_state['opencalais_building']){ return; }
+  if (isset($form_state['opencalais_building']) && $form_state['opencalais_building']) { 
+    return; 
+  }
   
   $content_type = $form_state['values']['type'];
     
@@ -205,10 +207,10 @@ function opencalais_node_form_submit($form, &$form_state){
     if(isset($form_state['values'][$field])){
 
       $field_values = $form_state['values'][$field][$lang];
-      foreach($field_values as $i=>$v){
-        if(isset($extras[$field][$v['name']])){
+      foreach ($field_values as $i=>$v) {
+        if (isset($extras[$field][$v['name']])) {
           $eV = $extras[$field][$v['name']]['extra'];
-          foreach($eV as $n=>$extra_val){
+          foreach ($eV as $n=>$extra_val) {
             $form_state['values'][$field][$lang][$i][$n][$lang] = array();
             $form_state['values'][$field][$lang][$i][$n][$lang][] = array('value' => $extra_val);
           }//end foreach
@@ -220,7 +222,7 @@ function opencalais_node_form_submit($form, &$form_state){
 }
 
 /** 
- *  Implements hook_node_presave
+ *  Implements hook_node_presave().
  *
  *  Used to add fields if auto tagging is turned on and the field hasn't already been tagged
  *  This will be used when nodes are created in some way other than through the forms system
@@ -253,10 +255,10 @@ function opencalais_node_presave($node){
         // them while making sure any OpenCalais tags are removed and replaced with
         // new ones from the service.
         $key = 0;
-        foreach($suggestions as $term => $meta) {
+        foreach ($suggestions as $term => $meta) {
           $term = _opencalais_create_term($term, $real_field, $node, $meta);
           $exists = FALSE;
-          foreach($node->{$name}[$node->language] as $existing_term) {
+          foreach ($node->{$name}[$node->language] as $existing_term) {
             if ($existing_term['name'] == $term['name']) {
               $exists = TRUE;
             }
@@ -285,7 +287,7 @@ function opencalais_get_opencalais_tag_fields($form, $entity, $bundle) {
   $instances = field_info_instances($entity, $bundle);
   foreach ($instances as $field_name => $instance) {
     
-    if ( isset($instance['settings']['opencalais'])) {
+    if (isset($instance['settings']['opencalais'])) {
       $field = field_info_field($field_name);
       $opencalais_type = $instance['settings']['opencalais'];    
       if (in_array($opencalais_type, $entities)) {
@@ -293,10 +295,8 @@ function opencalais_get_opencalais_tag_fields($form, $entity, $bundle) {
       }
     }
   }
-  
   return $fields;
 }
-
 
 /**
  * AJAX Callback to get OpenCalais tag suggestions for an Entity.
@@ -333,8 +333,8 @@ function opencalais_suggest_tags_callback($form, &$form_state, $norebuild = FALS
     $form_state['rebuild'] = TRUE;
 
     /**
-     *  Because the form state isn't resaved in ajax_form_callback anything we put in the form_state gets destroyed
-     *  In order to keep our form_state stuff (the meta data) we need to do this.
+     * Because the form state isn't resaved in ajax_form_callback anything we put in the form_state gets destroyed
+     * In order to keep our form_state stuff (the meta data) we need to do this.
      */
     drupal_process_form($form['#form_id'], $form, $form_state);
   }
@@ -352,7 +352,7 @@ function opencalais_suggest_tags_submit($form, &$form_state) {
 /**
  *  Retrieve suggestions from OpenCalais service 
  */
-function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
+function opencalais_get_suggestions($node, $opencalais_type = NULL) {
   $tag_cache = &drupal_static(__FUNCTION__);
   
   if ($tag_cache && isset($node->ocid) && array_key_exists($node->ocid, $tag_cache)) {
@@ -402,21 +402,18 @@ function opencalais_get_suggestions(&$node, $opencalais_type = NULL) {
       $suggestions[$machine_name] = $terms;
     }   
   }
-
   $tag_cache[$node->ocid] = $suggestions;
   return isset($opencalais_type) ? (isset($suggestions[$opencalais_type]) ? $suggestions[$opencalais_type] : array()) : $suggestions;
 }
 
 /**
- *  Check whether the term should apply based on the field instance settings
+ * Check whether the term should apply based on the field instance settings
  */
 function opencalais_check_suggestion($settings, $term){
-  
   if ($settings && is_array($settings['settings']) && isset($settings['settings']['threshold'])) {
     return $settings['settings']['threshold'] <= $term->relevance;
   }
 }
-
 
 /**
  * Get a list of the entities that OpenCalais API defines.
@@ -429,9 +426,6 @@ function opencalais_check_suggestion($settings, $term){
  *   OpenCalais entities, use local defaults if they cannot be retrieved remotely.
  */
 function opencalais_get_all_entities() {
-  // As of 8/1/2015 it is still unknown where the list of entities can be dynamically
-  // loaded from OpenCalais. Here are the entities that are known at the time of this
-  // module's coding.
   $entities = array(
     'Anniversary', 'City', 'Company', 'Continent', 'Country', 'Currency', 'Editor', 
     'EmailAddress', 'EntertainmentAwardEvent', 'Facility', 'FaxNumber', 'Holiday', 
