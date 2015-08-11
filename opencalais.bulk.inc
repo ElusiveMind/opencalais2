@@ -240,7 +240,12 @@ function opencalais_get_messages(){
  */
 function opencalais_queue_reset($type) {
   // Reset the content type in our message queue variable.
-
+  $last_added = variable_get('opencalais_processed', array());
+  if (!empty($last_added[$type])) {
+    unset($last_added[$type]);
+  }
+  
+  
 
 
 
