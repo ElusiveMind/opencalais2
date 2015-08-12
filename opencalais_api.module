@@ -5,26 +5,27 @@
  */
 function opencalais_api_menu() {
   $items = array();
-  
   $items['admin/config/content/opencalais'] = array(
     'title' => 'OpenCalais settings',
     'description' => 'Configure Settings for OpenCalais integration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('opencalais_api_admin_settings'),
     'access arguments' => array('administer opencalais'),
+    'weight' => 2,
   );
-
   $items['admin/config/content/opencalais/api'] = array(
-    'title' => 'API',
+    'title' => 'API Settings',
     'description' => 'Configure Settings for OpenCalais integration',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-
   return $items;
 }
 
 /**
  * Implements hook_init().
+ *
+ * TODO: In the next version of this module, we need to remove this hook_init() because
+ * I hate it.
  */
 function opencalais_api_init() {
   if (!class_exists('ARC2')) {
@@ -40,18 +41,13 @@ function opencalais_api_init() {
 /**
  * Build the admin settings form.
  */
-function opencalais_api_admin_settings() {
-  $form = array();
-  $opencalais_url = array(
-    '!opencalaisurl' => l(t('Need One'), 'http://www.opencalais.com/user/register')
-    );
-  
+function opencalais_api_admin_settings($form, &$form_state) {
   $form['opencalais_api_key'] = array(
     '#type' => 'textfield',
     '#title' => t('OpenCalais API Key'),
     '#default_value' => variable_get('opencalais_api_key', NULL),
     '#size' => 60,
-    '#description' => t('Required to utilize the Calais service. !calaisurl?', $opencalais_url),
+    '#description' => t('Required to utilize the Calais service. ') . l(t('Click here to get one.'), 'https://iameui-eagan-prod.thomsonreuters.com/iamui/UI/createUser?app_id=Bold&realm=Bold'),
   );
   $form['opencalais_api_server'] = array(
     '#type' => 'textfield',
@@ -60,13 +56,11 @@ function opencalais_api_admin_settings() {
     '#size' => 60,
     '#description' => t('The domain name for the server to use.  Typically you will not have to change this unless you want to test beta functionality.'),
   );
-  
   $form['help_text'] = array(
     '#markup' => '<div class="messages status">' . t('To configure tagging visit an individual content type\'s edit area and click the OpenCalais Fields tab.') . 
       '<br/><br/>' . l('Content Types Edit Screen', 'admin/structure/types') .
       '</div>'
   );
-  
   $form = system_settings_form($form);
   return $form;
 }
