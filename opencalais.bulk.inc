@@ -4,9 +4,6 @@
  *
  *  Makes use of the bulk operations api
  */
-
-//Controls how many nodes will be processed per cron run
-define('OPENCALAIS_PROCESS_COUNT', 25);
  
 /**
  *  Create a queue of all the nodes that need to be tagged, 
@@ -19,6 +16,9 @@ function opencalais_create_queue(){
 
 /**
  * Remove all content type items from queue.
+ *
+ * @param string $content_type
+ *   The node (content) type for to remove from the queue.
  */
 function opencalais_queue_remove_items($content_type) {
   $items_removed = 0;
@@ -42,24 +42,40 @@ function opencalais_queue_remove_items($content_type) {
         ->execute();
     }
   }
+  
+  // Clear out the tracking system variable
+  $last_added = variable_get('opencalais_processed', array());
+  if (!empty($last_added[$content_type])) {
+    unset($last_added[$content_type]);
+  }
+  variable_set('opencalais_processed', $last_added);
+  
   drupal_set_message($items_removed . ' Items removed', 'status');
   drupal_goto('admin/config/content/opencalais/bulk');
 }
 
 /**
- * Purge the opencalais bulk processing queue.
+ * Purge the opencalais bulk processing queue. All of it. Everything. The whole
+ * enchilada.
  */
 function opencalais_queue_remove_all() {
   db_delete('queue')
     ->condition('name', 'opencalais_tagging_queue')
     ->execute();
+  variable_set('opencalais_processed', array());
 }
 
-
 /**
- *  Add items to a queue
+ * Add nodes of a specific content type to the queue.
+ *
+ * @param string $content_type
+ *   The node (content) type for to added to the queue.
+ *
+ * @return int $count
+ *   The number of nodes added to the queue.
  */
 function opencalais_queue_add_items($content_type) {
+  // Get the last loaded nid for this content type or 0 if not in queue.
   $last_added = variable_get('opencalais_processed', array());
   $last_added = isset($last_added[$content_type]) ? $last_added[$content_type] : 0;
   
@@ -92,13 +108,20 @@ function opencalais_queue_add_items($content_type) {
 }
 
 /**
- *  Process a queue item
- *  Load the node and resave it - autotagging stuff in presave will take care of the rest
+ * Process a queue item.
+ *
+ * Load the node and resave it - autotagging stuff in presave will take care of the rest
+ *
+ * @param object $data
+ *   The item retrieved from the cache.
+ *
+ * @return bool $success
+ *   Whether or not the process was successful.
  */ 
 function opencalais_queue_process_node($data){
   $nid = $data->data['nid'];
   try { 
-    //We need to set this so that ARC2 will work and be able to connect with the OpenCalais service
+    // We need to set this so that ARC2 will work and be able to connect with the OpenCalais service
     if (!isset($_SERVER['SERVER_NAME'])) {
       global $base_url;
       $parts = parse_url($base_url);
@@ -107,16 +130,18 @@ function opencalais_queue_process_node($data){
     }
     $node = node_load($nid);
     node_save($node);
-  } catch(Exception $e){
-    opencalais_set_message(t('Could not process node with id %id. You may try to manually resave the node to resolve this issue.', array('%id' =>$ nid)), 'error');
+  } catch(Exception $e) {
+    opencalais_set_message(t('Could not process node with id %id. You may try to manually resave the node to resolve this issue.', array('%id' => $nid)), 'error');
     return FALSE;
   }
   return TRUE;
 }
 
 /**
- *  Utility function to get the current number of nodes remaining.
- *  returns an already translated string.
+ * Utility function to get the current number of nodes remaining.
+ * 
+ * @return string $result
+ *   An allready translated string of the results of queue progress.
  */
 function opencalais_queue_get_progress(){
   $queue = DrupalQueue::get('opencalais_tagging_queue');
@@ -124,17 +149,18 @@ function opencalais_queue_get_progress(){
   
   // Only show what we have remaining in the queue.
   if ($items > 0) {
-    return t('%n nodes remaining in the queue. These items will be processed %max at a time during cron runs.', array('%n'=> $items, '%max' => OPENCALAIS_PROCESS_COUNT));
+    $process_count = variable_get('opencalais_bulk_processing_count', 25);
+    return t('%n nodes remaining in the queue. These items will be processed %max at a time during cron runs.', array('%n'=> $items, '%max' => $process_count));
   }
 }
 
 /**
- * Function to be called inside of a hook_cron (if auto bulk processing is enabled)
- * Processed queued nodes t our configured rate
+ * Function to be called inside of a hook_cron (if auto bulk processing is enabled).
+ * Processed queued nodes as per our configured rate
  */
 function opencalais_queue_cron() {
   $queue = DrupalQueue::get('opencalais_tagging_queue');
-  $count = OPENCALAIS_PROCESS_COUNT;
+  $count = variable_get('opencalais_bulk_processing_count', 25);
   while ($count--) {
     $item = $queue->claimItem(15);
     if (!$item) {
@@ -166,7 +192,7 @@ function opencalais_add_items_to_queue_callback($type){
 }
 
 /**
- *  Create a form for bulk processing
+ * Create a form for bulk processing
  */
 function opencalais_bulk_operations_form() {
   //print out any messages we have
@@ -200,7 +226,7 @@ function opencalais_bulk_operations_form() {
 }
 
 /**
- *  Utility function to get an array of the content types that have autotagging turned on
+ * Utility function to get an array of the content types that have autotagging turned on
  */
 function _opencalais_get_auto_content_types(){
   $auto_settings = variable_get('opencalais_autotagging', array());
@@ -208,16 +234,16 @@ function _opencalais_get_auto_content_types(){
 } 
   
 /**
- *  Utility function to create opencalais specific message queue
+ * Utility function to create opencalais specific message queue
  */ 
-function opencalais_set_message($message, $type='status'){
+function opencalais_set_message($message, $type = 'status'){
   $queue = variable_get('opencalais_message_queue', array());
   $queue[$type][] = $message;
   variable_set('opencalais_message_queue', $queue);
 } 
 
 /**
- *  Utility function to print out all the opencalais messages
+ * Utility function to print out all the opencalais messages
  */
 function opencalais_get_messages(){
   $queue = variable_get('opencalais_message_queue', array());
@@ -232,22 +258,25 @@ function opencalais_get_messages(){
 }
 
 /**
- * A function to remove all tags from a node's taxonomies for OpenCalais and re-queue
- * the content type for indexing.
+ * A function to re-queue the content type for indexing.
  *
  * @param string $type
  *   The node type to clear and re-queue
  */
 function opencalais_queue_reset($type) {
-  // Reset the content type in our message queue variable.
+  // Reset the content type in our message queue variable. Do this by clearing the high
+  // node id (nid) in the system variable.
   $last_added = variable_get('opencalais_processed', array());
   if (!empty($last_added[$type])) {
     unset($last_added[$type]);
   }
+  variable_set('opencalais_processed', $last_added);
   
+  // Re-add all of the items to the queue.
+  opencalais_queue_add_items($type);
   
+  // Inform on what we have done.
+  drupal_set_message('The ' . $type . ' node type has been re-queued for bulk processing');
 
-
-
+  drupal_goto('admin/config/content/opencalais/bulk');
 }
- 

@@ -4,10 +4,9 @@
  */
  
 /**
- * Present some configuration options.
+ * Form callback for configuration options.
  */ 
-function opencalais_admin_general_settings() {
-  $form = array();
+function opencalais_admin_general_settings($form, &$form_state) {
   $form['opencalais_tags_in_verticaltab']  = array(
     '#type' => 'checkbox', 
     '#title' => t('Collect Tags into Vertical Tab'), 
@@ -20,15 +19,29 @@ function opencalais_admin_general_settings() {
     '#description' => t('If checked, an additional HTTP request will be made for each disambiguated entity to find the Linked Open Data URIs to DBPedia, Freebase, etc.  It does involve additional requests to external servers.  If you don\'t know what this is, you should leave it disabled.'),
     '#default_value' => variable_get('opencalais_lookup_uri', 0),
   );
-  
-  $form['opencalais_bulk_processing_enabled'] = array(
+  $form['opencalais_bulk'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Bulk Processing Options',
+  );
+  $form['opencalais_bulk']['opencalais_bulk_processing_enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Bulk Processing on Cron'),
     '#description' => t('Enable bulk processing of nodes for content types with auto tagging enabled.  This processing will happen in batches
       during cron runs until complete.'),
     '#default_value' => variable_get('opencalais_bulk_processing_enabled', FALSE)
   );
-  
+  $form['opencalais_bulk']['opencalais_bulk_processing_count'] = array(
+    '#type' => 'textfield',
+    '#maxlength' => 4,
+    '#size' => 4,
+    '#title' => t('Number of nodes to bulk process on every cron run.'),
+    '#default_value' => variable_get('opencalais_bulk_processing_count', 25),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="opencalais_bulk_processing_enabled"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
   $form['help_text'] = array(
     '#markup' => '<div class="messages status">' . t('To configure tagging visit an individual content type\'s edit area and click the OpenCalais Fields tab.') . 
       '<br/><br/>' . l('Content Types Edit Screen', 'admin/structure/types') .
@@ -39,19 +52,21 @@ function opencalais_admin_general_settings() {
 }
 
 /**
-*  A form to add the fields necessary for OpenCalais to a content type.
-*/
-function opencalais_add_fields_form($content_type){
+ * A form to add the fields necessary for OpenCalais to a content type.
+ *
+ * @param string $content_type
+ *   The node (or content type) we are working with.
+ */
+function opencalais_add_fields_form($form, &$form_state, $content_type){
   //Handle any errors on the form
   if (!empty($_POST) && form_get_errors()) {
     drupal_set_message(t('The fields have not been created because of the errors.'), 'error');
   }
   
-  //try to get the content type from the arguments (or passed via menu system) (/admin/structure/types/manage/<typename>)
-  //can't do anything if its not there so just return
-  $content_type = $content_type ? $content_type : arg(4);
+  // Convert the content type from our URL structure to the machine name so Drupal can
+  // handle it.
   $content_type = str_ireplace('-', '_', $content_type);
-  if(!$content_type){ 
+  if (!isset($content_type)) { 
   
     drupal_set_message(t('An error has occured, no content type was specified'), 'error');
     return array(); 
@@ -66,7 +81,7 @@ function opencalais_add_fields_form($content_type){
   
   $form['content_type'] = array(
     '#type' => 'hidden',
-    '#value' => str_ireplace('-', '_', $content_type),
+    '#value' => $content_type,
   );
   
   $auto = variable_get('opencalais_autotagging', array());

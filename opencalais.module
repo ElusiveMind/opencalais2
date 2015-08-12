@@ -39,20 +39,21 @@ function opencalais_permission() {
 function opencalais_menu() {
   $items = array();
   
-  $items['admin/config/content/opencalais/tagging'] = array(
-    'title' => 'Tagging',
+  $items['admin/config/content/opencalais/settings'] = array(
+    'title' => 'Settings',
     'description' => 'Configure Entity Tagging',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('opencalais_admin_general_settings'),
     'access arguments' => array('administer opencalais'),
     'file' => 'opencalais.admin.inc',
     'type' => MENU_LOCAL_TASK,
+    'weight' => 0,
   );
   
   $items['admin/structure/types/manage/%/opencalais_fields'] = array(
     'title' => 'OpenCalais Fields',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('opencalais_add_fields_form', 1),
+    'page arguments' => array('opencalais_add_fields_form', 4),
     'access arguments' => array('administer opencalais'),
     'file' => 'opencalais.admin.inc',
     'type' => MENU_LOCAL_TASK,
@@ -64,7 +65,8 @@ function opencalais_menu() {
     'page arguments' => array('opencalais_bulk_operations_form'),
     'access arguments' => array('administer opencalais'),
     'file' => 'opencalais.bulk.inc',
-    'type' => MENU_LOCAL_TASK
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
   );
   
   $items['admin/config/content/opencalais/bulk/%'] = array(
