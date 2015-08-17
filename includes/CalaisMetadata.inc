@@ -1,5 +1,5 @@
 <?php
-// $Id: CalaisMetadata.inc,v 1.1.2.7 2009/02/06 22:32:53 febbraro Exp $
+
 /**
  * @file CalaisMetadata.inc
  */

@@ -1,25 +1,11 @@
 <?php
+
 /**
  * @file opencalais.module
  */
  
-//Include the utils file which provides all the field utility functions required to create and remove fields, and some purely utility functions
+// Include the utils file which provides all the field utility functions required to create and remove fields, and some purely utility functions
 include_once('opencalais.utils.inc');
-
-// Request constants
-define('CALAIS_REQUEST_NO',             0);
-define('CALAIS_REQUEST_MANUAL',         1);
-define('CALAIS_REQUEST_AUTO',           2);
-define('CALAIS_REQUEST_AUTO_PUBLISHED', 3);
- 
-// Constants for how to apply tags once retrieved
-define('CALAIS_PROCESS_MANUAL', 0);
-define('CALAIS_PROCESS_AUTO',   1);
- 
-define('CALAIS_WATCHDOG', 'OpenCalais');
- 
-// Node Build Mode Contant
-define('CALAIS_PROCESSED', TRUE);
   
 /**
  * Implements hook_permission().
@@ -247,7 +233,7 @@ function opencalais_node_form_submit($form, &$form_state){
  *  Used to add fields if auto tagging is turned on and the field hasn't already been tagged
  *  This will be used when nodes are created in some way other than through the forms system
  */
-function opencalais_node_presave($node){
+function opencalais_node_presave($node) {
   $content_type = $node->type;
   $auto = variable_get('opencalais_autotagging', array());
   $auto = isset($auto[$content_type]) ? $auto[$content_type] : 0;
@@ -429,7 +415,7 @@ function opencalais_get_suggestions($node, $opencalais_type = NULL) {
 /**
  * Check whether the term should apply based on the field instance settings
  */
-function opencalais_check_suggestion($settings, $term){
+function opencalais_check_suggestion($settings, $term) {
   if ($settings && is_array($settings['settings']) && isset($settings['settings']['threshold'])) {
     return $settings['settings']['threshold'] <= $term->relevance;
   }
@@ -468,7 +454,7 @@ function opencalais_get_all_entities() {
  *
  * Add the threshold setting the field settings form for opencalais fields
  */    
-function opencalais_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id){
+function opencalais_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
   //only show the threshold editor for nodes created by opencalais (nodes that already have a threshold and have the correct name)
   if(isset($form['#instance']['settings']['threshold']) && stristr($form['#field']['field_name'], 'opencalais_')){
     $form['instance']['settings']['threshold'] = array(
@@ -487,24 +473,22 @@ function opencalais_form_field_ui_field_edit_form_alter(&$form, &$form_state, $f
 /**
  * Simple Validator for the system settings form;
  */
-function opencalais_check_threshold($form, $form_state){
+function opencalais_check_threshold($form, $form_state) {
   $threshold = $form_state['values']['instance']['settings']['threshold'];
   if(!isset($threshold) || $threshold < 0 || $threshold > 1){
     form_set_error('instance[settings][threshold]', 'Threshold must be between 0 and 1');
   } 
 }
 
-
 /**
  * Pre-Processor for the system_settings form form to move OpenCalais Terms to the 
- * sidebar (for rubik)
+ * sidebar (for rubik).
  */
-function opencalais_preprocess_system_settings_form(&$variables){
+function opencalais_preprocess_system_settings_form(&$variables) {
   if($variables['form']['#form_id'] == 'opencalais_add_fields_form'){
     // push the help into the sidebar - this will work on rubik - not sure what else right now.
     $variables['sidebar'][] = $variables['form']['help'];
     unset($variables['form']['help']);
-    
   }
 }
 

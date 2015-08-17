@@ -1,5 +1,5 @@
 <?php
-// $Id: SemanticProxy.inc,v 1.1.2.2 2009/03/26 22:51:30 febbraro Exp $
+
 /**
  * @file SemanticProxy.inc
  * The main interface to the semantic proxy web service
