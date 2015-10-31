@@ -1,14 +1,5 @@
 <?php
-/*
-  Copyright (C) 2008 by Phase2 Technology.
-  Author(s): Frank Febbraro, Irakli Nadareishvili
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License.
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY. See the LICENSE.txt file for more details.
-
- */
 /**
  * @file
  */
@@ -18,13 +9,11 @@
  */
 function calais_admin_settings() {
   $form = array();
-
   $form['general'] = array(
     '#type' => 'fieldset',
     '#title' => t('General'),
     '#collapsible' => TRUE,
   );
-
   $form['general']['calais_store_rdf'] = array(
     '#type' => 'checkbox',
     '#title' => t('Store Calais RDF Locally'),
@@ -43,7 +32,7 @@ function calais_admin_settings() {
 
   $form = system_settings_form($form);
   $form['#submit'][] = 'calais_admin_settings_submit';
-  
+
   return $form;
 }
 
@@ -118,7 +107,6 @@ function calais_build_nodetype_settings(&$form) {
   foreach ($node_types as $nt) {
     $key = drupal_strtolower($nt->type);
     $name = $nt->name;
-    
     $form[$key] = array(
       '#type' => 'fieldset',
       '#title' => $name,
@@ -127,7 +115,6 @@ function calais_build_nodetype_settings(&$form) {
       '#nodetype' => $key,
       '#theme' => 'calais_nodetype_settings',
     );
-
     $request = variable_get("calais_node_{$key}_request", CALAIS_REQUEST_NO);
     $form[$key]["calais_node_{$key}_request"] = array(
       '#type' => 'radios',
@@ -137,24 +124,22 @@ function calais_build_nodetype_settings(&$form) {
       '#options' => $request_options,
       '#attributes' => array('class' => "nodetype_toggle", 'data' => $key),
     );
-
-    $processing = variable_get("calais_node_{$key}_process", CALAIS_PROCESS_MANUAL);
-    $form[$key]["calais_node_{$key}_process"] = array(
+    $processing = variable_get('calais_node_' . $key . '_process', CALAIS_PROCESS_MANUAL);
+    $form[$key]['calais_node_' . $key . '_process'] = array(
       '#type' => 'radios',
       '#parents' => array('calais_node_'. $key .'_process'),
       '#title' => t('Tag content'),
       '#default_value' => $processing,
       '#options' => $process_options,
     );
-    
-    $form[$key]["calais_threshold_{$key}"] = array(
+    $form[$key]['calais_threshold_' . $key] = array(
       '#type' => 'textfield',
       '#size' => 5,
       '#title' => t('Minimum suggested tag relevancy'),
-      '#default_value' => variable_get("calais_threshold_{$key}", 0.0),
+      '#default_value' => variable_get('calais_threshold_' . $key, 0.0),
       '#description' => t('Determine how relevant a term must be in order for Calais to suggest it for a particular node.  Based on a 0.00-1.00 scale, with 0.00 being least relevant (i.e. many terms appear).'),
     );
-    
+
     calais_build_entity_settings($form, $key, $name, TRUE);
   }
 }
@@ -181,7 +166,7 @@ function calais_admin_settings_submit($form, &$form_state) {
     if ($request != CALAIS_REQUEST_NO) {
       // assign all configured calais vocabs to this node type
       $node_vocabularies = calais_get_entity_vocabularies($key);
-      if(!empty($node_vocabularies)) {
+      if (!empty($node_vocabularies)) {
         foreach ($node_vocabularies as $entity => $vid) {
           db_query("INSERT INTO {vocabulary_node_types} (vid, type) values('%d','%s') ", $vid, $key);
         }
@@ -195,17 +180,17 @@ function calais_admin_settings_submit($form, &$form_state) {
  */
 function theme_calais_nodetype_settings($form) {
   drupal_add_js(drupal_get_path("module", "calais") ."/calais.admin.js");
-  
+
   $type = $form['#nodetype'];
-  
-  $output = '';  
+
+  $output = '';
   $output .= drupal_render($form["calais_node_{$type}_request"]);
-  
+
   $extra = $form["calais_node_{$type}_request"]['#value'] == CALAIS_REQUEST_NO ? "style='display:none;'" : "";
-  $output .= "<div id='{$type}_toggle' {$extra}>";  
+  $output .= "<div id='{$type}_toggle' {$extra}>";
   $output .= drupal_render($form);
   $output .= "</div>";
-  
+
   return $output;
 }
 
@@ -217,7 +202,7 @@ function calais_bulk_process() {
 
   // Get a system settings form for # of nodes per cron
   $output = drupal_get_form('calais_cron_settings_form');
-  
+
   // Generate a summary of total node counts per content type
   $node_types = array();
   foreach (node_get_types('types', NULL, TRUE) as $type) {
@@ -232,18 +217,18 @@ function calais_bulk_process() {
   );
   $config = array();
   $rows = array();
-  $result = db_query("SELECT type, COUNT(*) as count FROM {node} GROUP BY type");  
+  $result = db_rewrite_sql(db_query("SELECT n.type, COUNT(n.*) AS count FROM {node} n GROUP BY n.type"));
   while ($row = db_fetch_object($result)) {
-    $queue_count = db_result(db_query("SELECT COUNT(*) FROM {calais_node_queue} WHERE type = '%s'", $row->type));  
-    
+    $queue_count = db_result(db_query("SELECT COUNT(*) FROM {calais_node_queue} WHERE type = '%s'", $row->type));
+
     $request = calais_get_request_type($row->type);
     if ($request == CALAIS_REQUEST_NO) {
       $actions = t('Disabled');
     }
     else {
-      $actions = $queue_count > 0 
+      $actions = $queue_count > 0
             ? l(t('Clear queue'), "admin/settings/calais/queue/clear/{$row->type}")
-            : l(t('Add to queue'), 
+            : l(t('Add to queue'),
                 "admin/settings/calais/queue/enqueue/{$row->type}",
                 array('attributes' => array('id' => "calais-queue-toggle-{$row->type}", 'class' => 'calais-queue-toggle')));
     }
@@ -254,13 +239,13 @@ function calais_bulk_process() {
       $queue_count,
       $actions,
     );
-    
+
     // Build the config that poplates the queue form based on type
     $process = calais_get_processing_type($row->type);
     $threshold = calais_get_node_threshold($row->type);
     $config[$row->type] = array('process' => $process, 'threshold' => $threshold);
   }
-  
+
   $queue_summary = array(
     '#type' => 'item',
     '#title' => t('Content Summary'),
@@ -277,7 +262,7 @@ function calais_bulk_process() {
  * The form that controls how many nodes are sent to Calais on cron runs.
  */
 function calais_cron_settings_form() {
-  $queue_count = db_result(db_query("SELECT COUNT(*) FROM {calais_node_queue}"));  
+  $queue_count = db_result(db_query("SELECT COUNT(*) FROM {calais_node_queue}"));
   $cron_limit = variable_get('calais_cron_limit', 10);
   if ($cron_limit == 0) {
     $expected = t('There is no processing scheduled');
@@ -285,7 +270,7 @@ function calais_cron_settings_form() {
   else {
     $expected = ceil($queue_count / $cron_limit);
   }
-  
+
   $numbers = drupal_map_assoc(array(0, 5, 10, 25, 50, 100));
   $form['calais_cron_limit'] = array(
     '#type' => 'select',
@@ -299,14 +284,14 @@ function calais_cron_settings_form() {
     '#title' => t('Number of cron executions to fully process this queue'),
     '#value' => $expected,
   );
-    
+
   return system_settings_form($form);
 }
 
 /**
  * Add the nodes of a given content type to the queue for Calais processing
  *
- * @param $type 
+ * @param $type
  *      The node type
  * @param $process_type
  *      The type of Calais processing (i.e. suggest, auto apply, etc.)
@@ -325,11 +310,11 @@ function calais_enqueue($type, $process_type = NULL, $threshold = NULL) {
 function calais_enqueue_form($form_state) {
   $form['#theme'] = 'calais_enqueue_form';
   $form['type'] = array(
-    '#type' => 'hidden', 
+    '#type' => 'hidden',
     '#default_value' => '',
   );
   $form['type_label'] = array(
-    '#type' => 'item', 
+    '#type' => 'item',
     '#title' => t('Content Type'),
     '#value' => '<div id="calais-queue-type-label"></div>',
     '#description' => t('All content of this type will be added to the queue for tagging.'),
@@ -338,7 +323,7 @@ function calais_enqueue_form($form_state) {
   $process_options = array(
     CALAIS_PROCESS_MANUAL => t('Suggest the terms, but let me tag the content'),
     CALAIS_PROCESS_AUTO => t('Automatically tag the content'),
-  );  
+  );
   $processing = calais_get_processing_type($type);
   if ($processing == CALAIS_PROCESS_AUTO_ONCE) {
     $processing == CALAIS_PROCESS_AUTO;
@@ -348,8 +333,8 @@ function calais_enqueue_form($form_state) {
     '#title' => t('Tag content'),
     '#default_value' => $processing,
     '#options' => $process_options,
-  );  
-  $threshold = calais_get_node_threshold($type);  
+  );
+  $threshold = calais_get_node_threshold($type);
   $form["threshold"] = array(
     '#type' => 'textfield',
     '#size' => 5,
@@ -358,12 +343,12 @@ function calais_enqueue_form($form_state) {
     '#description' => t('Determine how relevant a term must be in order for Calais to suggest it for a particular node.  Based on a 0.00-1.00 scale, with 0.00 being least relevant (i.e. many terms appear).'),
   );
   $form['buttons']['submit'] = array(
-    '#type' => 'submit', 
-    '#value' => t('Queue'), 
+    '#type' => 'submit',
+    '#value' => t('Queue'),
   );
   $form['buttons']['close'] = array(
-    '#type' => 'button', 
-    '#value' => t('Close'), 
+    '#type' => 'button',
+    '#value' => t('Close'),
   );
   return $form;
 }
@@ -387,7 +372,7 @@ function calais_enqueue_form_submit($form, $form_state) {
 function theme_calais_enqueue_form($form) {
   drupal_add_css(drupal_get_path("module", "calais") ."/calais.admin.css");
   drupal_add_js(drupal_get_path("module", "calais") ."/calais.admin.js");
-  
+
   $output = "<div id='calais-queue-form' style='display:none;'>";
   $output .= "<h2>" . t('Bulk process settings') . '</h2>';
   $output .= drupal_render($form);
@@ -419,7 +404,7 @@ function calais_queue_clear_confirm(&$form_state, $type) {
 function calais_queue_clear_confirm_submit($form, &$form_state) {
   $type = $form_state['values']['type'];
   db_query("DELETE FROM {calais_node_queue} WHERE nid IN (SELECT nid FROM {node} WHERE type = '%s')", $type);
-  
+
   $form_state['redirect'] = 'admin/settings/calais/queue';
 }
 

@@ -354,7 +354,7 @@ function calais_schema() {
     ),
     'primary key' => array('nid'),
   );
-  
+
   return $schema;
 }
 
