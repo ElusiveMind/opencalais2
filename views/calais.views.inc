@@ -1,7 +1,8 @@
 <?php
 
 /**
- * @file calais.views.inc
+ * @file
+ * calais.views.inc
  */
 
 /**

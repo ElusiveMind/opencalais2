@@ -76,7 +76,7 @@ class calais_handler_field_guid extends views_handler_field_url {
     }
     return check_plain($guid);
   }
- 
+
   function get_link_text($value, $values) {
     $label = $this->options['link_text'];
     switch ($label) {
