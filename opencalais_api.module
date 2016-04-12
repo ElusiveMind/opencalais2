@@ -38,7 +38,7 @@ function opencalais_api_init() {
       include_once libraries_get_path('arc') . '/ARC2.php';
     }
     else {
-      drupal_set_message(t('Could not find the ARC2.php library in @path.', array('@path' => libraries_get_path('arc'))), 'error');
+      drupal_set_message(t('Could not find the ARC2.php library. Please download the ARC2 library (<a href="https://github.com/semsol/arc2">click here to download.</a>), rename the folder arc and place into your libraries folder.'), 'error');
     }
   }
 }
