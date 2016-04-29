@@ -52,7 +52,8 @@ class CalaisJsonProcessor {
    */
   protected function build_entities(&$keywords) {
     foreach ($this->json as $guid => $data) {
-      if ((!empty($data->forenduserdisplay) && $data->forenduserdisplay != 'true') || empty($data->_typeGroup)) {
+      
+      if (empty($data->_typeGroup)) {
         continue;
       }
       $type = (!empty($data->_type)) ? $data->_type : NULL;
@@ -63,7 +64,7 @@ class CalaisJsonProcessor {
           $this->extract_tags($keywords, $type, $guid, $data);
           break;
         case 'entities':
-          //$this->extract_entities($keywords, $type, $guid, $data);
+          $this->extract_entities($keywords, $type, $guid, $data);
           break;
         case 'relations':
           //$this->extract_relations($keywords, $type, $guid, $data);
@@ -125,17 +126,16 @@ class CalaisJsonProcessor {
    * @param $data The indexed triple for the current Calais Term/GUID
    */
   protected function extract_entities(&$keywords, $type, $guid, $data) {
-    $entity_type_guid = $type[0];
-    $entity_type = preg_replace('/.*\//ims', '', $entity_type_guid);
-
-    $entity_value = $data[self::CALAIS_NAME][0];
+    $entity_type_guid = $guid;
+    $entity_type = $data->_type;
+    $entity_value = $data->name;
 
     if (!property_exists($keywords, $entity_type)) {
       $keywords->{$entity_type} = new CalaisMetadata($entity_type_guid, $entity_type);
     }
-
+    
     $metadata = &$keywords->{$entity_type};
-    $metadata->set_term_data($guid, $entity_value);
+    $metadata->set_term_data($guid, $entity_value, $data->relevance);
   }
 
   /**
