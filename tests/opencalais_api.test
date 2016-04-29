@@ -133,7 +133,7 @@ class OpenCalaisWebServiceTestCase extends OpenCalaisApiTestCase {
     $body = filter_xss($this->get_test_content());
     $date = format_date(time(), 'custom', 'r');
 
-    $opencalais = opencalais_api_get_service(array('host' => variable_get('opencalais_api_server', 'api.thomsonreuters.com')));
+    $opencalais = opencalais_get_service(array('host' => variable_get('opencalais_api_server', 'api.thomsonreuters.com')));
     $results = $opencalais->analyzeXML('OpenCalais API Test', $body, $date);
     debug($results);
     $this->assertCalaisResults($results);

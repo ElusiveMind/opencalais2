@@ -6,12 +6,10 @@
  */
 class CalaisService implements Calais {
 
-  const PATH = '/permid/calais';
-
   private $defaults = array(
     'protocol' => 'https',
     'contentType' => 'TEXT/HTML',
-    'outputFormat' => 'XML/RDF',
+    'outputFormat' => 'application/json',
     'externalID' => '',
     'submitter' => 'Drupal',
     'calculateRelevanceScore' => 'true',
@@ -22,9 +20,7 @@ class CalaisService implements Calais {
   );
 
   public $parameters;
-  public $rdf;
-  public $triples = array();
-  public $flatTriples = array();
+  public $data = array();
   public $keywords = array();
 
   /**
@@ -75,10 +71,10 @@ class CalaisService implements Calais {
       'Content-Type: text/raw',
       'X-AG-Access-Token: ' . $api_key,
       'Content-Length: ' . strlen($content),
-      'outputformat:XML/RDF',
+      'outputformat: application/json',
     );
 
-    $uri = $this->parameters['protocol'] . '://' . $this->parameters['host'] . self::PATH;
+    $uri = $this->parameters['protocol'] . '://' . $this->parameters['host'] . '/permid/calais';
 
     $curlOptions = array(
       CURLOPT_URL => $uri,
@@ -94,18 +90,18 @@ class CalaisService implements Calais {
     // send request and get response from api..........
     $response = curl_exec($ch);
 
-    if (isset($response->error)) {
-      self::log_calais_error($response);
-      return array();
-    }
+    //if (isset($response->error)) {
+    //  self::log_calais_error($response);
+    //  return array();
+    //}
 
-    $this->rdf = $response;
-    $this->processor = new CalaisRdfProcessor();
-    $this->keywords = $this->processor->parse_rdf($this->rdf);
-    $this->triples = $this->processor->triples;
-    if (isset($this->processor->flatTriples)) {
-      $this->flatTriples = $this->processor->flatTriples;
-    }
+    $this->data = json_decode($response);
+    $this->processor = new CalaisJsonProcessor();
+    $this->keywords = $this->processor->parse_json($this->data);
+    //$this->triples = $this->processor->triples;
+    //if (isset($this->processor->flatTriples)) {
+    //  $this->flatTriples = $this->processor->flatTriples;
+    //}
 
     return $this->keywords;
   }

@@ -1,8 +1,37 @@
 <?php
+
 /**
  * @file
  * Administrative settings and configurations.
  */
+
+/**
+ * Settings for the API including the server address and API key.
+ */
+function opencalais_admin_api_settings($form, &$form_state) {
+  $form = array();
+  $form['opencalais_api_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OpenCalais API Key'),
+    '#default_value' => variable_get('opencalais_api_key', NULL),
+    '#size' => 60,
+    '#description' => 'Required to utilize the Calais service. ' . l(t('Click here to get one.'), 'https://iameui-eagan-prod.thomsonreuters.com/iamui/UI/createUser?app_id=Bold&realm=Bold'),
+  );
+  $form['opencalais_api_server'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OpenCalais Server'),
+    '#default_value' => variable_get('opencalais_api_server', 'api.thomsonreuters.com'),
+    '#size' => 60,
+    '#description' => t('The domain name for the server to use.  Typically you will not have to change this unless you want to test beta functionality.'),
+  );
+  $form['help_text'] = array(
+    '#markup' => '<div class="messages status">' . t('To configure tagging visit an individual content type\'s edit area and click the OpenCalais Fields tab.') .
+      '<br /><br />' . l(t('Content Types Edit Screen'), 'admin/structure/types') .
+      '</div>'
+  );
+  $form = system_settings_form($form);
+  return $form;
+}
 
 /**
  * Form callback for configuration options.

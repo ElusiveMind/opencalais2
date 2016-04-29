@@ -106,3 +106,29 @@ function opencalais_update_7101() {
 function opencalais_update_7102() {
   variable_get('opencalais_default_impl', 'CalaisService');
 }
+
+/**
+ * Implements hook_requirements().
+ */
+function opencalais_api_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+  if ($phase == 'runtime') {
+    $apikey = variable_get('opencalais_api_key', FALSE);
+    if ($apikey === FALSE || empty($apikey)) {
+      $settings_uri = array(
+        '!calaissetturi' => l(t('OpenCalais API Settings'),
+        'admin/config/content/opencalais')
+      );
+      $requirements['opencalais-api'] = array(
+        'title' => $t('OpenCalais API'),
+        'value' => $t('API Key is not set.'),
+        'description' => $t('OpenCalais integration module is enabled, but
+                              OpenCalais API Key is not set. Module will not function properly.
+                              Please obtain the key and and set it at !calaissetturi as
+                              soon as possible', $settings_uri),
+        'severity' => REQUIREMENT_ERROR);
+    }
+  }
+  return $requirements;
+}

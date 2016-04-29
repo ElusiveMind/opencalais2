@@ -84,7 +84,7 @@ function opencalais_add_field($content_type, $field_name, $taxonomy_name, $title
  * Create a new vocabulary with the OpenCalais key as the machine name.
  */
 function opencalais_create_vocabulary($entity) {
-  $readable = opencalais_api_make_readable($entity);
+  $readable = opencalais_make_camel_case_readable($entity);
   $machine = _opencalais_make_machine_name($entity);
   $vocabulary = taxonomy_vocabulary_machine_name_load($machine);
 
@@ -342,3 +342,23 @@ function _opencalais_create_term($term, $field, $node, $meta=array()) {
 
   return (array) $term;
 }
+
+
+/**
+ * Takes a 'CamelCase' word and adds spaces to make it 'Camel Case'
+ *
+ * @return an formated string
+ */
+function opencalais_make_camel_case_readable($camel_case) {
+  return preg_replace('/(.*?[a-z]{1})([A-Z]{1}.*?)/', '${1} ${2}', $camel_case);
+}
+
+/**
+ * Takes a 'CamelCase' word and makes it 'camel_case'
+ *
+ * @return an formated string
+ */
+//function opencalais_make_camel_case_machine($camel_case) {
+//  $name = preg_replace('/(.*?[a-z]{1})([A-Z]{1}.*?)/', '${1}_${2}', $camel_case);
+//  return strtolower($name);
+//}
