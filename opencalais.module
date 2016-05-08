@@ -42,7 +42,7 @@ function opencalais_menu() {
   );
   $items['admin/config/content/opencalais/settings'] = array(
     'title' => 'Settings',
-    'description' => 'Configure Entity Tagging',
+    'description' => 'Configure Settings for OpenCalais integration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('opencalais_admin_general_settings'),
     'access arguments' => array('administer opencalais'),

@@ -2,36 +2,36 @@
 
 /**
  * @file
- * The parser for the Calais JSON responses.
+ * The parser for Calais JSON responses.
  */
  
 class CalaisJsonProcessor {
 
   public $docId;
   public $keywords;
-
-  const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
-  const CALAIS_SUBJECT = 'http://s.opencalais.com/1/pred/subject';
-  const CALAIS_NAME = 'http://s.opencalais.com/1/pred/name';
-  const CALAIS_LAT = 'http://s.opencalais.com/1/pred/latitude';
-  const CALAIS_LON = 'http://s.opencalais.com/1/pred/longitude';
-  const CALAIS_SCORE = 'http://s.opencalais.com/1/pred/score';
-  const CALAIS_PERMID = 'http://s.opencalais.com/1/pred/permid';
-  const CALAIS_OPENPERMID = 'http://s.opencalais.com/1/pred/openpermid';
-  const SAMEAS = 'http://www.w3.org/2002/07/owl#sameAs';
+  public $json;
   
   /**
-   * Parse the RDF.  First render it into an indexed fashion, then have at it. We need to process
-   * in 2 stages. The first stage identifies all of the entities, events, and facts. The second
-   * stage then adds relevance and geo info to those previously identified terms.  The 2nd pass i
-   * is required b/c sometimes the relevance/geo data appears in the document before the term
-   * has been identified.
+   * Our constructor calls the parse_json method by default.
    *
-   * @param $rdf_xml
-   *    The RDF to parse
+   * @param string $json
+   * The json from the Calais API to be parsed.
+   *
+   * @return array $metadata;
+   * An array of CalaisMetadata objects.
+   */
+  public function __construct($json) {
+    return $this->parse_json($json);
+  }
+  
+  /**
+   * Parse the json.
+   *
+   * @param $json
+   * The json from the Calais API to be parsed.
    *
    * @return
-   *    An array of CalaisMetadata objects.
+   * An array of CalaisMetadata objects.
    *
    * @see CalaisMetadata.inc
    */
@@ -41,14 +41,15 @@ class CalaisJsonProcessor {
     $this->json = $json;
     $this->keywords = new stdClass();
     $this->build_entities($this->keywords);
+    $this->extract_entity_metadata($this->keywords);
     return $this->keywords;
   }
 
   /**
-   * Build the set of entities from this RDF triples returned from Calais.
+   * Build the set of entities from this json nodes returned from Calais.
    *
    * @param $keywords
-   *    The object containing type keyed CalaisMetadata
+   * The object containing type keyed CalaisMetadata
    */
   protected function build_entities(&$keywords) {
     foreach ($this->json as $guid => $data) {
@@ -78,9 +79,6 @@ class CalaisJsonProcessor {
       elseif ($type == 'http://s.opencalais.com/1/type/cat/DocCat') {
         $this->extract_categories($keywords, $type, $guid, $data);
       }
-      elseif ($type_group == 'socialTag') {
-        $this->extract_tags($keywords, $type, $guid, $data);
-      }
       */
       
     }
@@ -94,25 +92,25 @@ class CalaisJsonProcessor {
    *    The object containing type keyed CalaisMetadata
    */
   protected function extract_entity_metadata(&$keywords) {
-    foreach ($this->triples as $guid => $data) {
-      $type = $data[self::RDF_TYPE];
+    foreach ($this->json as $guid => $data) {
+      $type = $data->_type;
 
-      if (!isset($type))
+      if (empty($type)) {
         continue;
-
-      if ($type[0] == 'http://s.opencalais.com/1/type/sys/RelevanceInfo') {
+      }
+      
+      if (!empty($data->relevance)) {
         $this->set_relevance($keywords, $data);
       }
-      elseif (strpos($type[0], 'http://s.opencalais.com/1/type/er') !== FALSE) {
-        $er_type = preg_replace('@http://s.opencalais.com/1/type/er/@ims', '', $type[0]);
-        $er_type = drupal_strtolower(str_replace('/', '_', $er_type));
-        $func = 'apply_resolved_' . $er_type;
+      
+      $er_type = drupal_strtolower($type);
+      $method = 'apply_resolved_' . $er_type;
 
-        if (!method_exists($this, $func)) {
-          $func = 'apply_resolved_data';
+        if (!method_exists($this, $method)) {
+          $method = 'apply_resolved_data';
         }
 
-        $this->{$func}($keywords, $guid, $data, $er_type);
+        $this->{$method}($keywords, $guid, $data, $er_type);
       }
     }
   }
@@ -256,21 +254,29 @@ class CalaisJsonProcessor {
   /**
    * Extracts the disambiguation geo city data
    *
-   * @param $keywords The result array for CalaisMetadata
-   * @param $guid The resolved entity guid
-   * @param $data The indexed triple for the current Calais Term
+   * @param $keywords 
+   * The result array for CalaisMetadata
+   *
+   * @param $guid 
+   * The resolved entity guid
+   *
+   * @param $data
+   * The indexed json node for the current Calais Term
    */
-  protected function apply_resolved_geo_city(&$keywords, $guid, $data) {
+  protected function apply_resolved_city(&$keywords, $guid, $data) {
+    $latitude = (!empty($data->resolutions[0]->latitude)) ? $data->resolutions[0]->latitude : NULL;
+    $longitude = (!empty($data->resolutions[0]->longitude)) ? $data->resolutions[0]->longitude : NULL;
+    $shortname = (!empty($data->resolutions[0]->shortname)) ? $data->resolutions[0]->shortname : NULL;
+    $containedbycountry = (!empty($data->resolutions[0]->containedbycountry)) ? $data->resolutions[0]->containedbycountry : NULL;
+    $containedbystate = (!empty($data->resolutions[0]->containedbystate)) ? $data->resolutions[0]->containedbystate : NULL;
+    
     $extra = array(
-      'latitude' => isset($data[self::CALAIS_LAT]) ? $data[self::CALAIS_LAT][0] : '',
-      'longitude' => isset($data[self::CALAIS_LON]) ? $data[self::CALAIS_LON][0] : '',
-      'shortname' => isset($data['http://s.opencalais.com/1/pred/shortname'][0]) ? $data['http://s.opencalais.com/1/pred/shortname'][0] : '',
-      'containedbycountry' => isset($data['http://s.opencalais.com/1/pred/containedbycountry'][0]) ? $data['http://s.opencalais.com/1/pred/containedbycountry'][0] : ''
+      'latitude' => $latitude,
+      'longitude' => $longitude,
+      'shortname' => $shortname,
+      'containedbycountry' => $containedbycountry,
+      'containedbystate' => $containedbystate,
     );
-    //Only set this if its actually available
-    if (isset($data['http://s.opencalais.com/1/pred/containedbystate'])) {
-      $extra['containedbystate'] = $data['http://s.opencalais.com/1/pred/containedbystate'][0];
-    }
     
     $this->apply_resolved_data($keywords, $guid, $data, 'city', $extra);
   }
@@ -280,14 +286,17 @@ class CalaisJsonProcessor {
    *
    * @param $keywords The result array for CalaisMetadata
    * @param $guid The resolved entity guid
-   * @param $data The indexed triple for the current Calais Term
+   * @param $data The indexed json node for the current Calais Term
    */
-  protected function apply_resolved_geo_provinceorstate(&$keywords, $guid, $data) {
+  protected function apply_resolved_provinceorstate(&$keywords, $guid, $data) {
+    $containedbycountry = isset($data->resolutions[0]->containedbycountry) ? $data->resolutions[0]->containedbycountry : NULL;
+    $shortname = isset($data->resolutions[0]->shortname) ? $data->resolutions[0]->shortname : NULL;
+  
     $extra = array(
-      'latitude' => $data[self::CALAIS_LAT][0],
-      'longitude' => $data[self::CALAIS_LON][0],
-      'shortname' => $data['http://s.opencalais.com/1/pred/shortname'][0],
-      'containedbycountry' => isset($data['http://s.opencalais.com/1/pred/containedbycountry']) ? $data['http://s.opencalais.com/1/pred/containedbycountry'][0] : '',
+      'latitude' => $data->resolutions[0]->latitude,
+      'longitude' => $daya->resolutions[0]->longitude,
+      'shortname' => $shortname,
+      'containedbycountry' => $containedbycountry,
     );
     $this->apply_resolved_data($keywords, $guid, $data, 'province_or_state', $extra);
   }
@@ -376,10 +385,7 @@ class CalaisJsonProcessor {
       return array();
     }
 
-    if (!class_exists('ARC2')) {
-      drupal_set_message(t('Could not find the ARC2.php library. Please download the ARC2 library (<a href="https://github.com/semsol/arc2">click here to download.</a>), rename the folder arc and place into your libraries folder.'), 'error');
 
-    }
 
     $parser = ARC2::getRDFXMLParser();
     $parser->parse(NULL, $ret->data);
