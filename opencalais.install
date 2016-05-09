@@ -108,6 +108,13 @@ function opencalais_update_7102() {
 }
 
 /**
+ * Update to remove our opencalais_default_impl variable no longer needed.
+ */
+function opencalais_update_7103() {
+  variable_del('opencalais_default_impl');
+}
+
+/**
  * Implements hook_requirements().
  */
 function opencalais_api_requirements($phase) {

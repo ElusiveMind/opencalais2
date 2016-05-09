@@ -527,12 +527,11 @@ function opencalais_add_fields_submit($form, &$form_state) {
 }
 
 /**
- *  Retrieve a list of extra fields to apply to a vocabulary
+ * Retrieve a list of extra fields to apply to a vocabulary
  */
 function opencalais_get_extra_fields($vocab) {
   $geo = array('City', 'Country', 'ProvinceOrState');
   $company = array('Company');
-  $product = array('Product');
   $person = array('Person');
 
   if (in_array($vocab, $geo)) {
@@ -540,9 +539,6 @@ function opencalais_get_extra_fields($vocab) {
   }
   elseif (in_array($vocab, $company)) {
     return array('Ticker', 'LegalName', 'PermID URL', 'PermID');
-  }
-  elseif (in_array($vocab, $product)) {
-    return array();
   }
   elseif (in_array($vocab, $person)) {
     return array('PermID');
@@ -570,7 +566,6 @@ function opencalais_api_supported_languages() {
 /**
  * Get the service implementing the Calais interface.
  */
-function opencalais_get_service($options = array(), $type = NULL) {
-  $class = variable_get('opencalais_default_impl', 'CalaisService');
-  return new $class($options);
+function opencalais_get_service($options = array()) {
+  return new CalaisService($options);
 }

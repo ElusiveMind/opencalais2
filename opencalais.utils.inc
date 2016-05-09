@@ -335,7 +335,6 @@ function _opencalais_create_term($term, $field, $node, $meta=array()) {
   return (array) $term;
 }
 
-
 /**
  * Takes a 'CamelCase' word and adds spaces to make it 'Camel Case'
  *
@@ -344,13 +343,3 @@ function _opencalais_create_term($term, $field, $node, $meta=array()) {
 function opencalais_make_camel_case_readable($camel_case) {
   return preg_replace('/(.*?[a-z]{1})([A-Z]{1}.*?)/', '${1} ${2}', $camel_case);
 }
-
-/**
- * Takes a 'CamelCase' word and makes it 'camel_case'
- *
- * @return an formated string
- */
-//function opencalais_make_camel_case_machine($camel_case) {
-//  $name = preg_replace('/(.*?[a-z]{1})([A-Z]{1}.*?)/', '${1}_${2}', $camel_case);
-//  return strtolower($name);
-//}
