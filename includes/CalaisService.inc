@@ -60,15 +60,33 @@ class CalaisService implements Calais {
   }
 
   /**
+   * Analyze the provided content, passing it to Calais in HTML format .
+   *
+   * @param $content
+   *    The HTML content to process
+   * @return
+   *    The processed Calais results. The raw RDF result is contained in the $this->rdf field.
+   */
+  public function analyzeRaw($content, $api_key) {
+    if (!empty($api_key)) {
+      $this->parameters['contentType'] = 'text/raw';
+      return $this->analyze($content, $api_key);
+    }
+    else {
+      return array();
+    }
+  }
+
+  /**
    * Analyze the content via Calais.
    *
    * @param $content The content to ship off to Calais for analysis
    * @return The processed Calais results. The raw RDF result is contained in the $this->rdf field.
    */
-  public function analyze($content, $api_key) {
+  private function analyze($content, $api_key) {
 
     $headers = array(
-      'Content-Type: text/raw',
+      'Content-Type: ' . $this->parameters['contentType'],
       'X-AG-Access-Token: ' . $api_key,
       'Content-Length: ' . strlen($content),
       'outputformat: application/json',
@@ -90,19 +108,14 @@ class CalaisService implements Calais {
     // send request and get response from api..........
     $response = curl_exec($ch);
 
-    //if (isset($response->error)) {
-    //  self::log_calais_error($response);
-    //  return array();
-    //}
+    if (isset($response->error)) {
+      self::log_calais_error($response);
+      return array();
+    }
 
     $this->data = json_decode($response);
     $this->processor = new CalaisJsonProcessor();
     $this->keywords = $this->processor->parse_json($this->data);
-    //$this->triples = $this->processor->triples;
-    //if (isset($this->processor->flatTriples)) {
-    //  $this->flatTriples = $this->processor->flatTriples;
-    //}
-
     return $this->keywords;
   }
 

@@ -100,21 +100,20 @@ class CalaisJsonProcessor {
       }
       
       if (!empty($data->relevance)) {
-        $this->set_relevance($keywords, $data);
+        $this->set_relevance($keywords, $guid, $data);
       }
       
       $er_type = drupal_strtolower($type);
       $method = 'apply_resolved_' . $er_type;
 
-        if (!method_exists($this, $method)) {
-          $method = 'apply_resolved_data';
-        }
-
-        $this->{$method}($keywords, $guid, $data, $er_type);
+      if (!method_exists($this, $method)) {
+        $method = 'apply_resolved_data';
       }
+
+      $this->{$method}($keywords, $guid, $data, $er_type);
     }
   }
-
+    
   /**
    * Extracts the entities from the returned data
    *
@@ -221,9 +220,9 @@ class CalaisJsonProcessor {
    * @param $keywords The result array for CalaisMetadata
    * @param $data The indexed triple for the current Calais Term
    */
-  protected function set_relevance(&$keywords, $data) {
-    $subject = $data[self::CALAIS_SUBJECT][0];
-    $relevance = $data['http://s.opencalais.com/1/pred/relevance'][0];
+  protected function set_relevance(&$keywords, $guid, $data) {
+    $subject = $guid;
+    $relevance = $data->relevance;
     foreach ($keywords as &$entity) {
       if ($entity->has_guid($subject)) {
         $entity->set_term_relevance($subject, $relevance);
@@ -240,13 +239,12 @@ class CalaisJsonProcessor {
    * @param $extra Any extra domain specific data
    */
   protected function apply_resolved_data(&$keywords, $guid, $data, $type, $extra = array()) {
-    $subject = $data[self::CALAIS_SUBJECT][0];
-    $resolved_name = $data[self::CALAIS_NAME][0];
+    $subject = $guid;
+    $resolved_name = $data->name;
 
     foreach ($keywords as &$entity) {
       if ($entity->has_guid($subject)) {
-        $uris = variable_get('opencalais_lookup_uri', FALSE) ? self::lookup_linked_data_uris($guid) : array();
-        $entity->set_term_resolved_data($subject, $resolved_name, $guid, $type, $extra, $uris);
+        $entity->set_term_resolved_data($subject, $resolved_name, $guid, $type, $extra);
       }
     }
   }
@@ -310,27 +308,13 @@ class CalaisJsonProcessor {
    */
   protected function apply_resolved_geo_country(&$keywords, $guid, $data) {  
     $extra = array(
-      'latitude' => $data[self::CALAIS_LAT][0],
-      'longitude' => $data[self::CALAIS_LON][0],
-      'permid' => $data['http://s.opencalais.com/1/pred/permid'],
+      'latitude' => $data->resolutions[0]->latitude,
+      'longitude' => $data->resolutions[0]->longitude,
+      'permid' => $data->resolutions[0]->permid,
     );
     $this->apply_resolved_data($keywords, $guid, $data, 'country', $extra);
   }
   
-  /**
-   * Extracts the disambiguation person data
-   *
-   * @param $keywords The result array for CalaisMetadata
-   * @param $guid The resolved entity guid
-   * @param $data The indexed triple for the current Calais Term
-   */
-  protected function apply_resolved_person(&$keywords, $guid, $data) {
-    $extra = array(
-      'permid' => $data['http://s.opencalais.com/1/pred/permid'],
-    );
-    $this->apply_resolved_data($keywords, $guid, $data, 'person', 'extra');
-  }
-
   /**
    * Extracts the disambiguated company data
    *
@@ -339,69 +323,21 @@ class CalaisJsonProcessor {
    * @param $data The indexed triple for the current Calais Term
    */
   protected function apply_resolved_company(&$keywords, $guid, $data) {
-    $extra = array(
-      'score' => $data[self::CALAIS_SCORE][0],
-    );
-    //only set if its actually available
-    if (isset($data['http://s.opencalais.com/1/pred/ticker'])) {
-      $extra['ticker'] = $data['http://s.opencalais.com/1/pred/ticker'][0];
+    if (!empty($data->resolutions)) {    
+      $score = $data->resolutions[0]->score;
+      $ticker = (!empty($data->resolutions[0]->ticker) ? $data->resolutions[0]->ticker : NULL;
+      $permid_url = (!empty($data->resolutions[0]->id) ? $data->resolutions[0]->id : NULL;
+      $permid = (!empty($data->resolutions[0]->permid) ? $data->resolutions[0]->permid : NULL;
+      $legal_name = (!empty($data->resolutions[0]->name) ? $data->resolutions[0]->name : NULL;
+
+      $extra = array(
+        'ticker' => $ticker,
+        'score' => $score,
+        'permid_url' = $permid_url,
+        'permid' => $permid,
+        'legalname' => $legal_name,
+      );
+      $this->apply_resolved_data($keywords, $guid, $data, 'company', $extra);
     }
-    if (isset($data['http://s.opencalais.com/1/pred/openpermid'])) {
-      $extra['permid_url'] = $data['http://s.opencalais.com/1/pred/openpermid'];
-    }
-    if (isset($data['http://s.opencalais.com/1/pred/openpermid'])) {
-      $extra['permid'] = $data['http://s.opencalais.com/1/pred/permid'];
-    }
-    if (isset($data['http://s.opencalais.com/1/pred/name'])) {
-      $extra['legalname'] = $data['http://s.opencalais.com/1/pred/name'];
-    }
-    $this->apply_resolved_data($keywords, $guid, $data, 'company', $extra);
   }
-
-  /**
-   * Extracts the disambiguation geo country data
-   *
-   * @param $keywords The result array for CalaisMetadata
-   * @param $guid The resolved entity guid
-   * @param $data The indexed triple for the current Calais Term
-   */
-  protected function apply_resolved_product_electronics(&$keywords, $guid, $data) {
-    $extra = array(
-      'score' => $data[self::CALAIS_SCORE][0],
-    );
-    $this->apply_resolved_data($keywords, $guid, $data, 'product', $extra);
-  }
-
-  /**
-   * For a give Calais URI, lookup the RDF document and creat the connected Linked Open Data URIs
-   * to other places like DBPedia, Freebase, Crunchbase, Musicbrainz, Geonames, etc.
-   */
-  protected function lookup_linked_data_uris($guid) {
-    $headers = array(
-      'Accept' => 'application/rdf+xml',
-    );
-    $ret = drupal_http_request("$guid.rdf", $headers);
-    if (isset($ret->error)) {
-      return array();
-    }
-
-
-
-    $parser = ARC2::getRDFXMLParser();
-    $parser->parse(NULL, $ret->data);
-    $triples = $parser->getSimpleIndex();
-
-    $uris = array();
-    if (array_key_exists($guid, $triples)) {
-      $sameas = $triples[$guid][self::SAMEAS];
-      if (count($sameas) && is_array($sameas)) {
-        foreach ($sameas as $uri) {
-          $parts = parse_url($uri);
-          $uris[$parts['host']] = $uri;
-        }
-      }
-    }
-    return $uris;
-  }
-
 }

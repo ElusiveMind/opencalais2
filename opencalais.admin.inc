@@ -43,12 +43,6 @@ function opencalais_admin_general_settings($form, &$form_state) {
     '#description' => t('This will move all of the OpenCalais related Tag fields on the edit form into a Vertical Tab toward the bottom of the form entitled "Show OpenCalais Tags"'),
     '#default_value' => variable_get('opencalais_tags_in_verticaltab', 1),
   );
-  $form['opencalais_lookup_uri'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Lookup Linked Open Data URI'),
-    '#description' => t('If checked, an additional HTTP request will be made for each disambiguated entity to find the Linked Open Data URIs to DBPedia, Freebase, etc.  It does involve additional requests to external servers.  If you don\'t know what this is, you should leave it disabled.'),
-    '#default_value' => variable_get('opencalais_lookup_uri', 0),
-  );
   $form['opencalais_bulk'] = array(
     '#type' => 'fieldset',
     '#title' => 'Bulk Processing Options',

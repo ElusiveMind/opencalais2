@@ -393,9 +393,16 @@ function opencalais_get_suggestions($node, $opencalais_type = NULL) {
 
     $opencalais = opencalais_get_service();
     $api_key = variable_get('opencalais_api_key', NULL);
-    $tags = $opencalais->analyzeHTML(strip_tags($body), $api_key);
+    
+    // If the API key has not yet been set, then we short-circuit because we can't
+    // do anything anyway.
+    if (empty($api_key)) {
+      return array();
+    }
+    
+    $tags = $opencalais->analyzeRaw(strip_tags($body), $api_key);
 
-    //get a list of all the fields for this content type
+    // Get a list of all the fields for this content type.
     $fields = opencalais_get_fields_for_content_type($node->type);
 
     $suggestions = array();
@@ -406,7 +413,7 @@ function opencalais_get_suggestions($node, $opencalais_type = NULL) {
       if (isset($fields[$machine_name])) {
         $settings = field_info_instance('node', $fields[$machine_name]['field'], $node->type);
         foreach ($metadata->terms as $guid => $term) {
-          //only add it if its relevant
+          // Only add it if its relevant.
           if (opencalais_check_suggestion($settings, $term)) {
             $terms[$term->name] = array(
               'relevance' => (float)$term->relevance,
