@@ -4,13 +4,13 @@
  * @file
  * The parser for Calais JSON responses.
  */
- 
+
 class CalaisJsonProcessor {
 
   public $docId;
   public $keywords;
   public $json;
-  
+
   /**
    * Our constructor calls the parse_json method by default.
    *
@@ -25,7 +25,7 @@ class CalaisJsonProcessor {
       return $this->parse_json($json);
     }
   }
-  
+
   /**
    * Parse the json.
    *
@@ -55,13 +55,13 @@ class CalaisJsonProcessor {
    */
   protected function build_entities(&$keywords) {
     foreach ($this->json as $guid => $data) {
-      
+
       if (empty($data->_typeGroup)) {
         continue;
       }
       $type = (!empty($data->_type)) ? $data->_type : NULL;
       $type_group = $data->_typeGroup;
-      
+
       switch ($type_group) {
         case 'socialTag':
           $this->extract_tags($keywords, $type, $guid, $data);
@@ -100,11 +100,11 @@ class CalaisJsonProcessor {
           'status' => $this->status,
         );
         break;
-      
-        
+      default:
+        break;
     }
   }
-  
+
   /**
    * Process the RDF triple and grab the additional metadata on entities.
    * Additional metadata is relevance score and a slew of resolved entity dismbiguation
@@ -118,11 +118,11 @@ class CalaisJsonProcessor {
       if (empty($data->_type)) {
         continue;
       }
-      
+
       if (!empty($data->relevance)) {
         $this->set_relevance($keywords, $guid, $data);
       }
-      
+
       $er_type = drupal_strtolower($data->_type);
       $method = 'apply_resolved_' . $er_type;
 
@@ -133,7 +133,7 @@ class CalaisJsonProcessor {
       $this->{$method}($keywords, $guid, $data, $er_type);
     }
   }
-    
+
   /**
    * Extracts the entities from the returned data
    *
@@ -150,7 +150,7 @@ class CalaisJsonProcessor {
     if (!property_exists($keywords, $entity_type)) {
       $keywords->{$entity_type} = new CalaisMetadata($entity_type_guid, $entity_type);
     }
-    
+
     $metadata = &$keywords->{$entity_type};
     $metadata->set_term_data($guid, $entity_value, $data->relevance);
   }
@@ -276,10 +276,10 @@ class CalaisJsonProcessor {
   /**
    * Extracts the disambiguation geo city data
    *
-   * @param $keywords 
+   * @param $keywords
    * The result array for CalaisMetadata
    *
-   * @param $guid 
+   * @param $guid
    * The resolved entity guid
    *
    * @param $data
@@ -291,7 +291,7 @@ class CalaisJsonProcessor {
     $shortname = (!empty($data->resolutions[0]->shortname)) ? $data->resolutions[0]->shortname : NULL;
     $containedbycountry = (!empty($data->resolutions[0]->containedbycountry)) ? $data->resolutions[0]->containedbycountry : NULL;
     $containedbystate = (!empty($data->resolutions[0]->containedbystate)) ? $data->resolutions[0]->containedbystate : NULL;
-    
+
     $extra = array(
       'latitude' => $latitude,
       'longitude' => $longitude,
@@ -299,7 +299,7 @@ class CalaisJsonProcessor {
       'containedbycountry' => $containedbycountry,
       'containedbystate' => $containedbystate,
     );
-    
+
     $this->apply_resolved_data($keywords, $guid, $data, 'city', $extra);
   }
 
@@ -313,14 +313,14 @@ class CalaisJsonProcessor {
   protected function apply_resolved_provinceorstate(&$keywords, $guid, $data) {
     $containedbycountry = isset($data->resolutions[0]->containedbycountry) ? $data->resolutions[0]->containedbycountry : NULL;
     $shortname = isset($data->resolutions[0]->shortname) ? $data->resolutions[0]->shortname : NULL;
-  
+
     $extra = array(
       'latitude' => $data->resolutions[0]->latitude,
       'longitude' => $data->resolutions[0]->longitude,
       'shortname' => $data->resolutions[0]->shortname,
       'containedbycountry' => $data->resolutions[0]->containedbycountry,
       'permid' => $data->resolutions[0]->permid,
-    );    
+    );
     $this->apply_resolved_data($keywords, $guid, $data, 'province_or_state', $extra);
   }
 
@@ -331,7 +331,7 @@ class CalaisJsonProcessor {
    * @param $guid The resolved entity guid
    * @param $data The indexed triple for the current Calais Term
    */
-  protected function apply_resolved_geo_country(&$keywords, $guid, $data) {  
+  protected function apply_resolved_geo_country(&$keywords, $guid, $data) {
     $extra = array(
       'latitude' => $data->resolutions[0]->latitude,
       'longitude' => $data->resolutions[0]->longitude,
@@ -339,7 +339,7 @@ class CalaisJsonProcessor {
     );
     $this->apply_resolved_data($keywords, $guid, $data, 'country', $extra);
   }
-  
+
   /**
    * Extracts the disambiguated company data
    *
@@ -348,7 +348,7 @@ class CalaisJsonProcessor {
    * @param $data The indexed triple for the current Calais Term
    */
   protected function apply_resolved_company(&$keywords, $guid, $data) {
-    if (!empty($data->resolutions)) {    
+    if (!empty($data->resolutions)) {
       $score = $data->resolutions[0]->score;
       $ticker = (!empty($data->resolutions[0]->ticker)) ? $data->resolutions[0]->ticker : NULL;
       $permid_url = (!empty($data->resolutions[0]->id)) ? $data->resolutions[0]->id : NULL;

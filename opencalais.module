@@ -559,7 +559,7 @@ function opencalais_cron() {
 /**
  * Declare the supported languages by Calais.
  */
-function opencalais_api_supported_languages() {
+function opencalais_supported_languages() {
   return array('en', 'fr', 'es');
 }
 
