@@ -20,8 +20,10 @@ class CalaisJsonProcessor {
    * @return array $metadata;
    * An array of CalaisMetadata objects.
    */
-  public function __construct($json) {
-    return $this->parse_json($json);
+  public function __construct($json = NULL) {
+    if (!empty($json)) {
+      return $this->parse_json($json);
+    }
   }
   
   /**
@@ -70,20 +72,39 @@ class CalaisJsonProcessor {
         case 'relations':
           //$this->extract_relations($keywords, $type, $guid, $data);
           break;
+        case 'categories':
+          //$this->extract_categories($keywords, $type, $guid, $data);
+          break;
+        case 'events':
+          //$this->extract_events($keywords, $type, $guid, $data);
+          break;
+        default:
+          break;
       }
-         
-      /*
-      elseif (strpos($data['_typeReference']), 'http://s.opencalais.com/1/type/em/r') !== FALSE) {
-        $this->extract_events($keywords, $type, $guid, $data);
-      }
-      elseif ($type == 'http://s.opencalais.com/1/type/cat/DocCat') {
-        $this->extract_categories($keywords, $type, $guid, $data);
-      }
-      */
-      
     }
   }
+  protected function extract_relations(&$keywords, $type, $guid, $data) {
+    switch ($type) {
+      case 'PersonCareer':
 
+      case 'ManMadeDisaster':
+        $name = $data->manmadedisaster;
+        break;
+      case 'Quotation':
+        $name = $this->quotation;
+        break;
+      case 'PersonCareer':
+        $name = $this->position;
+        $extras = array(
+          'careertype' => $this->careertype,
+          'status' => $this->status,
+        );
+        break;
+      
+        
+    }
+  }
+  
   /**
    * Process the RDF triple and grab the additional metadata on entities.
    * Additional metadata is relevance score and a slew of resolved entity dismbiguation
@@ -93,9 +114,8 @@ class CalaisJsonProcessor {
    */
   protected function extract_entity_metadata(&$keywords) {
     foreach ($this->json as $guid => $data) {
-      $type = $data->_type;
 
-      if (empty($type)) {
+      if (empty($data->_type)) {
         continue;
       }
       
@@ -103,7 +123,7 @@ class CalaisJsonProcessor {
         $this->set_relevance($keywords, $guid, $data);
       }
       
-      $er_type = drupal_strtolower($type);
+      $er_type = drupal_strtolower($data->_type);
       $method = 'apply_resolved_' . $er_type;
 
       if (!method_exists($this, $method)) {
@@ -240,8 +260,12 @@ class CalaisJsonProcessor {
    */
   protected function apply_resolved_data(&$keywords, $guid, $data, $type, $extra = array()) {
     $subject = $guid;
-    $resolved_name = $data->name;
 
+    if (empty($data->name)) {
+      return;
+    }
+
+    $resolved_name = $data->name;
     foreach ($keywords as &$entity) {
       if ($entity->has_guid($subject)) {
         $entity->set_term_resolved_data($subject, $resolved_name, $guid, $type, $extra);
@@ -292,10 +316,11 @@ class CalaisJsonProcessor {
   
     $extra = array(
       'latitude' => $data->resolutions[0]->latitude,
-      'longitude' => $daya->resolutions[0]->longitude,
-      'shortname' => $shortname,
-      'containedbycountry' => $containedbycountry,
-    );
+      'longitude' => $data->resolutions[0]->longitude,
+      'shortname' => $data->resolutions[0]->shortname,
+      'containedbycountry' => $data->resolutions[0]->containedbycountry,
+      'permid' => $data->resolutions[0]->permid,
+    );    
     $this->apply_resolved_data($keywords, $guid, $data, 'province_or_state', $extra);
   }
 
@@ -325,15 +350,15 @@ class CalaisJsonProcessor {
   protected function apply_resolved_company(&$keywords, $guid, $data) {
     if (!empty($data->resolutions)) {    
       $score = $data->resolutions[0]->score;
-      $ticker = (!empty($data->resolutions[0]->ticker) ? $data->resolutions[0]->ticker : NULL;
-      $permid_url = (!empty($data->resolutions[0]->id) ? $data->resolutions[0]->id : NULL;
-      $permid = (!empty($data->resolutions[0]->permid) ? $data->resolutions[0]->permid : NULL;
-      $legal_name = (!empty($data->resolutions[0]->name) ? $data->resolutions[0]->name : NULL;
+      $ticker = (!empty($data->resolutions[0]->ticker)) ? $data->resolutions[0]->ticker : NULL;
+      $permid_url = (!empty($data->resolutions[0]->id)) ? $data->resolutions[0]->id : NULL;
+      $permid = (!empty($data->resolutions[0]->permid)) ? $data->resolutions[0]->permid : NULL;
+      $legal_name = (!empty($data->resolutions[0]->name)) ? $data->resolutions[0]->name : NULL;
 
       $extra = array(
         'ticker' => $ticker,
         'score' => $score,
-        'permid_url' = $permid_url,
+        'permid_url' => $permid_url,
         'permid' => $permid,
         'legalname' => $legal_name,
       );

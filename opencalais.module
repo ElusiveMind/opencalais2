@@ -535,7 +535,7 @@ function opencalais_get_extra_fields($vocab) {
   $person = array('Person');
 
   if (in_array($vocab, $geo)) {
-    return array('Latitude', 'Longitude', 'ContainedByState', 'ContainedByCounty', 'PermID');
+    return array('Latitude', 'Longitude', 'ContainedByState', 'ContainedByCountry', 'PermID');
   }
   elseif (in_array($vocab, $company)) {
     return array('Ticker', 'LegalName', 'PermID URL', 'PermID');
