@@ -50,7 +50,7 @@ function calais_install() {
   // Module weights: put calais after taxonomy for form altering.
   db_query("UPDATE {system} SET weight = 10 WHERE name = 'calais'");
 
-  calais_install_rdf_repository($ret);
+  //calais_install_rdf_repository($ret);
 }
 
 /**
