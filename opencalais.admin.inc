@@ -50,8 +50,7 @@ function opencalais_admin_general_settings($form, &$form_state) {
   $form['opencalais_bulk']['opencalais_bulk_processing_enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Bulk Processing on Cron'),
-    '#description' => t('Enable bulk processing of nodes for content types with auto tagging enabled.  This processing will happen in batches
-      during cron runs until complete.'),
+    '#description' => t('Enable bulk processing of nodes for content types with auto tagging enabled.  This processing will happen in batches during cron runs until complete.'),
     '#default_value' => variable_get('opencalais_bulk_processing_enabled', FALSE)
   );
   $form['opencalais_bulk']['opencalais_bulk_processing_count'] = array(
@@ -82,9 +81,9 @@ function opencalais_admin_general_settings($form, &$form_state) {
  *   The node (or content type) we are working with.
  */
 function opencalais_add_fields_form($form, &$form_state, $content_type) {
-  //Handle any errors on the form
+  // Handle any errors on the form
   if (!empty($_POST) && form_get_errors()) {
-    drupal_set_message(t('The fields have not been created because of the errors.'), 'error');
+    drupal_set_message(t('The fields have not been created.'), 'error');
   }
 
   // Convert the content type from our URL structure to the machine name so Drupal can
@@ -111,7 +110,7 @@ function opencalais_add_fields_form($form, &$form_state, $content_type) {
   $auto = variable_get('opencalais_autotagging', array());
   $auto = (isset($auto[$content_type]) ? $auto[$content_type] : 0);
 
-  //Settings for auto tagging
+  // Settings for auto tagging.
   $form[$content_type . '_autotagging'] = array(
     '#type' => 'radios',
     '#title' => t('Tagging Method'),
@@ -131,7 +130,7 @@ function opencalais_add_fields_form($form, &$form_state, $content_type) {
   foreach ($entities as $entity) {
     $machine_name = _opencalais_make_machine_name($entity);
     $defaults = isset($entity_defaults[$entity]) ? $entity_defaults[$entity] : $entity_defaults;
-    //load in defaults for existing fields
+    // Load in defaults for existing fields.
     $defaults['enabled'] = isset($existing[$machine_name]) ? TRUE : FALSE;
     $defaults['threshold'] = isset($existing[$machine_name]) ? $existing[$machine_name]['threshold'] : $defaults['threshold'];
 
@@ -159,7 +158,7 @@ function opencalais_add_fields_form($form, &$form_state, $content_type) {
   }
 
   $form['info']['#theme'] = 'opencalais_add_fields_entities';
-  //create the buttons and submit handlers and such
+  // Create the buttons and submit handlers and such.
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
    '#type' => 'submit',
