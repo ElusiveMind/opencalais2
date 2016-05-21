@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * The main interface to the calais web service
+ * The main interface to the Calais web service
  */
 
 class Calais {
@@ -23,9 +24,6 @@ class Calais {
   );
 
   public $parameters;
-  public $rdf;
-  public $triples = array();
-  public $flatTriples = array();
   public $keywords = array();
 
   /**
@@ -79,8 +77,7 @@ class Calais {
    */
   public function analyze($content) {
 
-    $api_key = $this->parameters['apiKey'];
-    if (empty($api_key)) {
+    if (empty($this->parameters['apiKey'])) {
       $ret = new stdClass();
       $ret->error = 'API Key';
       $ret->code = '01';
@@ -91,7 +88,7 @@ class Calais {
 
     $headers = array(
       'Content-Type: ' . $this->parameters['contentType'],
-      'X-AG-Access-Token: ' . variable_get('calais_api_key', NULL),
+      'X-AG-Access-Token: ' . $this->parameters['apiKey'],
       'Content-Length: ' . drupal_strlen($content),
       'outputformat: ' . $this->parameters['outputFormat'],
     );
@@ -109,24 +106,17 @@ class Calais {
     $ch = curl_init();
     curl_setopt_array($ch, $curlOptions);
 
-    // send request and get response from api..........
+    // Send request and get response from API.
     $response = curl_exec($ch);
-
-    dsm($response);
-
 
     if (isset($response->error)) {
       self::log_calais_error($response);
       return array();
     }
 
-    $this->json = $response;
-    $this->processor = new CalaisJsonParser();
+    $this->json = json_decode($response);
+    $this->processor = new CalaisJsonProcessor();
     $this->keywords = $this->processor->parse_json($this->json);
-    //$this->triples = $this->processor->triples;
-    //if (isset($this->processor->flatTriples)) {
-    //  $this->flatTriples = $this->processor->flatTriples;
-    //}
 
     return $this->keywords;
   }

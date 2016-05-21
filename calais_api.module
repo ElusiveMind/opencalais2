@@ -11,7 +11,7 @@ function calais_api_init() {
   // Only load these if it is not a cached page
   module_load_include('inc', 'calais_api', 'includes/Calais');
   module_load_include('inc', 'calais_api', 'includes/CalaisMetadata');
-  module_load_include('inc', 'calais_api', 'includes/CalaisRdfProcessor');
+  //module_load_include('inc', 'calais_api', 'includes/CalaisRdfProcessor');
   module_load_include('inc', 'calais_api', 'includes/CalaisJsonProcessor');
 }
 
