@@ -152,6 +152,9 @@ class CalaisJsonProcessor {
     }
 
     $metadata = &$keywords->{$entity_type};
+    
+    //dsm($metadata);
+    
     $metadata->set_term_data($guid, $entity_value, $data->relevance);
   }
 
@@ -348,6 +351,8 @@ class CalaisJsonProcessor {
    * @param $data The indexed triple for the current Calais Term
    */
   protected function apply_resolved_company(&$keywords, $guid, $data) {
+    dsm($keywords);
+    dsm($data);
     if (!empty($data->resolutions)) {
       $score = $data->resolutions[0]->score;
       $ticker = (!empty($data->resolutions[0]->ticker)) ? $data->resolutions[0]->ticker : NULL;

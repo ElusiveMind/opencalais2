@@ -25,7 +25,20 @@ function opencalais_install() {
  * things "the Drupal way".
  */
 function opencalais_uninstall() {
-
+  require __DIR__ . '/opencalais.module';
+  $entities = opencalais_get_all_entities();
+  foreach ($entities as $value) {
+    $machine_name = _opencalais_make_machine_name($value);
+    $taxonomy = taxonomy_vocabulary_machine_name_load($machine_name);
+    taxonomy_vocabulary_delete($taxonomy->vid);
+  }
+  variable_del('opencalais_default_impl');
+  variable_del('opencalais_api_server');
+  variable_del('opencalais_api_key');
+  variable_del('opencalais_tags_in_verticaltab');
+  variable_del('opencalais_bulk_processing_enabled');
+  variable_del('opencalais_bulk_processing_count');
+  cache_clear_all();
 }
 
 /**
@@ -71,7 +84,6 @@ function opencalais_update_7001() {
   foreach ($content_types as $ct => $info) {
     $fields = _opencalais_update_fields_for_content_type($ct);
   }
-
   return t('Fields Successfully Updated');
 }
 
