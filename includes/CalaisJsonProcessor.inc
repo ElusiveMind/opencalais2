@@ -10,6 +10,7 @@ class CalaisJsonProcessor {
   public $docId;
   public $keywords;
   public $json;
+  public $CalaisDocumentCategory;
 
   /**
    * Our constructor calls the parse_json method by default.
@@ -55,53 +56,30 @@ class CalaisJsonProcessor {
    */
   protected function build_entities(&$keywords) {
     foreach ($this->json as $guid => $data) {
-
       if (empty($data->_typeGroup)) {
         continue;
       }
-      $type = (!empty($data->_type)) ? $data->_type : NULL;
-      $type_group = $data->_typeGroup;
-
-      switch ($type_group) {
+      $type = (!empty($data->_type)) ? $data->_type : array();
+      switch ($data->_typeGroup) {
         case 'socialTag':
           $this->extract_tags($keywords, $type, $guid, $data);
           break;
         case 'entities':
           $this->extract_entities($keywords, $type, $guid, $data);
           break;
-        case 'relations':
-          //$this->extract_relations($keywords, $type, $guid, $data);
+        case 'topics':
+          $this->extract_categories($keywords, $type, $guid, $data);
           break;
-        case 'categories':
-          //$this->extract_categories($keywords, $type, $guid, $data);
-          break;
-        case 'events':
+        //case 'events':
           //$this->extract_events($keywords, $type, $guid, $data);
-          break;
+          //break;
+        case 'relations':
+        case 'language':
+        case 'industry':
+        case 'versions':
         default:
           break;
       }
-    }
-  }
-  protected function extract_relations(&$keywords, $type, $guid, $data) {
-    switch ($type) {
-      case 'PersonCareer':
-
-      case 'ManMadeDisaster':
-        $name = $data->manmadedisaster;
-        break;
-      case 'Quotation':
-        $name = $this->quotation;
-        break;
-      case 'PersonCareer':
-        $name = $this->position;
-        $extras = array(
-          'careertype' => $this->careertype,
-          'status' => $this->status,
-        );
-        break;
-      default:
-        break;
     }
   }
 
@@ -146,15 +124,10 @@ class CalaisJsonProcessor {
     $entity_type_guid = $guid;
     $entity_type = $data->_type;
     $entity_value = $data->name;
-
     if (!property_exists($keywords, $entity_type)) {
       $keywords->{$entity_type} = new CalaisMetadata($entity_type_guid, $entity_type);
     }
-
     $metadata = &$keywords->{$entity_type};
-    
-    //dsm($metadata);
-    
     $metadata->set_term_data($guid, $entity_value, $data->relevance);
   }
 
@@ -171,11 +144,9 @@ class CalaisJsonProcessor {
     $type_guid = $type[0];
     $type_value = preg_replace('/.*\//ims', '', $type_guid);
     $type_value = opencalais_api_make_readable($type_value);
-
     if (!property_exists($keywords, 'EventsFacts')) {
       $keywords->EventsFacts = new CalaisMetadata('http://drupal.org/project/opencalais/EventsFacts', 'EventsFacts');
     }
-
     // Not sure if the best number for relevance of an Event/Fact, for now 1 will always include
     $keywords->EventsFacts->set_term_data($type_guid, $type_value, 1.000);
   }
@@ -189,17 +160,15 @@ class CalaisJsonProcessor {
    * @param $data The indexed triple for the current Calais Term/GUID
    */
   protected function extract_categories(&$keywords, $type, $guid, $data) {
-
-    $cat_guid = $data['http://s.opencalais.com/1/pred/docId'][0];
-    $cat_val = $data['http://s.opencalais.com/1/pred/name'][0];
-    $cat_score = array_key_exists('http://s.opencalais.com/1/pred/score', $data) ? $data['http://s.opencalais.com/1/pred/score'][0] : 0;
-
     if (!property_exists($keywords, 'CalaisDocumentCategory')) {
+      if (empty($type[0])) {
+        $type[0] = NULL;
+      }
       $keywords->CalaisDocumentCategory = new CalaisMetadata($type[0], 'CalaisDocumentCategory');
     }
-
-    $cat_val = preg_replace('/_.*/ims', '', $cat_val); // remove everything after the first underscore
-    $keywords->CalaisDocumentCategory->set_term_data($cat_guid, $cat_val, $cat_score);
+    // Remove everything after the first underscore.
+    $name = preg_replace('/_.*/ims', '', $data->name);
+    $keywords->CalaisDocumentCategory->set_term_data($guid, $name, $data->score);
   }
 
   /**
@@ -263,11 +232,9 @@ class CalaisJsonProcessor {
    */
   protected function apply_resolved_data(&$keywords, $guid, $data, $type, $extra = array()) {
     $subject = $guid;
-
     if (empty($data->name)) {
       return;
     }
-
     $resolved_name = $data->name;
     foreach ($keywords as &$entity) {
       if ($entity->has_guid($subject)) {
@@ -351,8 +318,6 @@ class CalaisJsonProcessor {
    * @param $data The indexed triple for the current Calais Term
    */
   protected function apply_resolved_company(&$keywords, $guid, $data) {
-    dsm($keywords);
-    dsm($data);
     if (!empty($data->resolutions)) {
       $score = $data->resolutions[0]->score;
       $ticker = (!empty($data->resolutions[0]->ticker)) ? $data->resolutions[0]->ticker : NULL;
