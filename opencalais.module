@@ -574,6 +574,7 @@ function opencalais_get_service($options = array()) {
 function opencalais_help($path, $arg) {
   switch ($path) {
     case 'admin/help#opencalais':
+     
       $output  = '<h4>' . t('Overview') . '</h4>';
       $output .= '<p>'  . t('The Tweet Feed module is an advanced importing, displaying and data association module that allows you to pull in tweets by search, user, or list. The parameters of what is pulled in falls under the guidelines of ') . '<a href="https://dev.twitter.com/rest/public/rate-limiting">' . t('Twitter\'s REST API') . '.</a></p>';
       $output .= '<p>'  . t('Tweets can be displayed as nodes or in views as well as displayed by hash tag or user mention. All hash tags and user mentions are stored as references im the tweet nodes to their corresponding taxonomy term. This gives you great power in terms of displaying tweets with specific content in specific places by leveraging the power of contextual filters and taxonomies.</p>');
@@ -594,6 +595,14 @@ function opencalais_help($path, $arg) {
       $output .= '<hr />';
       $output .= '<h4>' . t('Drush Commands') . '</h4>';
       $output .= '<p><a href="https://github.com/ElusiveMind/tweet_feed/wiki/Drush-Commands">' . t('Learning how to use Tweet Feed drush commands.') . '</a></p>';
+      
+      
+      $output .= '<div style="border-top: 2px solid #f8981d; padding-top: 10px; padding-bottom: 15px; width: 100%">';
+      $output .= '<img src="/' . drupal_get_path('module', 'opencalais') . '/images/flyingflip-logo.png" width="151" height="50" alt="FlyingFlip Studios" align="right" />';
+      $output .= '&copy; 2016 FlyingFlip Studios, LLC.<br />http://www.flyingflip.com<br clear="right">';
+      $output .= '<style>.item-list, hr { display: none; }</style></div>';      
+      
+      
       $output .= '<hr />';
       return $output;
   }
