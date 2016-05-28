@@ -519,6 +519,14 @@ function calais_update_6302() {
   return $ret;
 }
 
+/**
+ * Make sure we are after taxonomy #2045369
+ */
+function calais_update_6303() {
+  // Module weights: put calais after taxonomy for form altering.
+  db_query("UPDATE {system} SET weight = 10 WHERE name = 'calais'");
+}
+
 /******************************** Helpers ****************************/
 /**
  * Create new vocabularies for all currently known Calais Entities
