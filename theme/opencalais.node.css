@@ -71,6 +71,7 @@ input.opencalais_submit, a.button {
 
 .opencalais_button_holder {
   background-color: #FF9100 !important;
+  min-width: 573px !important;
 }
 
 .ajax-progress {
