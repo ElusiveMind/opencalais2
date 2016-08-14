@@ -396,6 +396,7 @@ function opencalais_get_suggestions($node, $opencalais_type = NULL) {
       $content .= $node->title;
       if ((bool) $node_fields[$node->type]) {
         $fields = field_info_instances('node', $node->type);
+
         foreach ($fields as $field_name => $instance) {
           // add all textfields and textareas
           if ($instance['widget']['module'] === 'text') {
@@ -403,7 +404,8 @@ function opencalais_get_suggestions($node, $opencalais_type = NULL) {
               continue;
             }
             // get all of that field into the html render array
-            foreach ($node->{$field_name}[$node->language] as $item) {
+            $field_language = field_language('node', $node, $field_name);
+            foreach ($node->{$field_name}[$field_language] as $item) {
               $content .= $item['value'] . "\n";
             }
           }
