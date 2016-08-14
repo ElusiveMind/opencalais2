@@ -6,6 +6,7 @@
  */
 
 class CalaisJsonProcessor {
+
   public $docId;
   public $keywords;
   public $json;
@@ -290,10 +291,13 @@ class CalaisJsonProcessor {
    */
   protected function apply_resolved_geo_country(&$keywords, $guid, $data) {
     if (!empty($data->resolutions)) {
+      $latitude = isset($data->resolutions[0]->latitude) ? $data->resolutions[0]->latitude : NULL;
+      $longitude = isset($data->resolutions[0]->longitude) ? $data->resolutions[0]->longitude : NULL;
+      $permid = isset($data->resolutions[0]->permid) ? $data->resolutions[0]->permid : NULL;
       $extra = array(
-        'latitude' => $data->resolutions[0]->latitude,
-        'longitude' => $data->resolutions[0]->longitude,
-        'permid' => $data->resolutions[0]->permid,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+        'permid' => $permid,
       );
     }
     else {
