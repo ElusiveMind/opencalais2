@@ -6,7 +6,6 @@
  */
 
 class CalaisJsonProcessor {
-
   public $docId;
   public $keywords;
   public $json;
