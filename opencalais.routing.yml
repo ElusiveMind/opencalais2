@@ -1,0 +1,7 @@
+opencalais.admin_settings:
+  path: '/admin/config/opencalais'
+  defaults:
+    _form: '\Drupal\opencalais\Form\ModuleConfigurationForm'
+    _title: 'Open Calais Configuration Page'
+  requirements:
+    _permission: 'administer site configuration'

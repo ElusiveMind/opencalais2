@@ -1,5 +1,6 @@
 <?php
-
+namespace Drupal\opencalais;
+use Drupal\opencalais\CalaisJsonProcessor;
 /**
  * @file
  * The main interface to the calais web service

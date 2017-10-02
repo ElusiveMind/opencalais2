@@ -1,4 +1,6 @@
 <?php
+namespace Drupal\opencalais;
+
 
 /**
  * @file
@@ -45,7 +47,7 @@ class CalaisJsonProcessor {
       if (!empty($json['doc']->info->docId)) {
         $this->docId = $json['doc']->info->docId;
       }
-      $this->keywords = new stdClass();
+      $this->keywords = new \stdClass();
       $this->build_entities($this->keywords);
       $this->extract_entity_metadata($this->keywords);
       return $this->keywords;

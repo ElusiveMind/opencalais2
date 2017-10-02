@@ -1,0 +1,6 @@
+name: OpenCalais
+type: module
+description: Utilize the Open Calais API to tag content.
+core: 8.x
+package: OpenCalais
+configure: opencalais.admin_settings
